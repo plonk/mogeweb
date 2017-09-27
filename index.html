@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>matter</title>
+    <!-- <script>
+    window.$ = window.jQuery = require('./bower_components/jquery/dist/jquery.min.js');
+    </script> -->
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script>
+      window.jQuery = $;
+    </script>
+    <script src="bower_components/emojione/lib/js/emojione.min.js"></script>
+    <link rel="stylesheet" href="bower_components/emojione/assets/css/emojione.min.css"/>
+    <script type="text/javascript">
+     emojione.imageType = 'svg';
+     emojione.imagePathPNG = 'bower_components/emojione/assets/png/';
+     emojione.imagePathSVG = 'bower_components/emojione/assets/svg/';
+    </script>
+
+    <!-- <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://bootswatch.com/slate/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css"> -->
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+      <script src="node_modules/CBuffer/cbuffer.js"></script>
+      <script src="node_modules/eastasianwidth/eastasianwidth.js"></script>
+      <script src="screenBuffer.js"></script>
+    <script src="receiver.js"></script>
+
+    <script src="transmitter.js"></script>
+    <script src="util.js"></script>
+    <script src="renderer.js"></script>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body style="background-color: #111">
+    <div style="text-shadow: 0px 0px 3px #bbb" id="screen_outer"><div id="screen"></div></div>
+
+<style>
+.long-button { min-width: 100px; font-size: 13px; letter-spacing: 1px; color: #eee }
+</style>
+
+    <div style="margin-top: 10px; text-align: right; color: #eee; margin-right: 10px">
+      <button id="input-button" class="btn btn-default long-button">INPUT</button>
+      <button id="connect-button" class="btn btn-default long-button">CONNECT</button>
+      <span id="indicator-offline" style="font-size: 20px; color: #333">●</span>
+      <span id="indicator-online" style="display: none; text-shadow: 0px 0px 10px red; font-size: 20px; color: #f10">●</span>
+      ON LINE
+    </div>
+
+    <div class="modal fade" id="inputModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">テキスト入力</h4>
+          </div>
+          <div class="modal-body">
+            <textarea id="text" class="form-control" placeholder="ここにテキストを入力"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" style="min-width: 100px">キャンセル</button>
+            <button type="button" class="btn btn-primary" onclick="enterText()" style="min-width: 100px">OK</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">バージョン情報</h4>
+          </div>
+          <div class="modal-body">
+            matter <span id="version"></span> &copy; Yoteichi<br>
+            <h4>使用ライブラリ</h4>
+            CBuffer <span id="cbuffer_version"></span>
+            bootstrap <span id="bootstrap_version"></span>
+            eastasianwidth <span id="eastasianwidth_version"></span>
+            emojione <span id="emojione_version"></span>
+            jquery <span id="jquery_version"></span>
+            pty <span id="pty_version"></span><br>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal" style="min-width: 100px">閉じる</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+  </body>
+
+</html>

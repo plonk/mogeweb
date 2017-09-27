@@ -42,10 +42,10 @@ var CONTROL_CHARACTER_KEYS = {
 };
 
 var APPLICATION_FUNCTION_KEY_TABLE = {
-  // 'ArrowUp'    : '\x1bOA',
-  // 'ArrowDown'  : '\x1bOB',
-  // 'ArrowRight' : '\x1bOC',
-  // 'ArrowLeft'  : '\x1bOD',
+  'ArrowUp'    : '\x1bOA',
+  'ArrowDown'  : '\x1bOB',
+  'ArrowRight' : '\x1bOC',
+  'ArrowLeft'  : '\x1bOD',
 };
 
 var MODIFIER_TABLE = {
@@ -97,6 +97,7 @@ function modifyFunctionKey (seq, ctrlKey, altKey, shiftKey) {
 };
 
 Transmitter.prototype.toCharacter = function (key, ctrlKey, altKey, shiftKey) {
+  console.log(this.cursorKeyMode);
   if (this.cursorKeyMode === 'application' &&
       APPLICATION_FUNCTION_KEY_TABLE[key]) {
       return APPLICATION_FUNCTION_KEY_TABLE[key];

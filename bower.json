@@ -1,0 +1,22 @@
+{
+  "name": "matter",
+  "description": "terminal emulator",
+  "main": "main.js",
+  "authors": [
+    "Yoteichi <plonk@piano.email.ne.jp>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "emojione": "^2.2.6",
+    "jquery": "^3.1.1",
+    "bootstrap": "^3.3.7"
+  }
+}

@@ -1,0 +1,210 @@
+body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+#screen_outer {
+    /* font-family: "PT Mono", Go Mono, "MS Mincho"; */
+    font-family: "MS Gothic", sans-serif;
+    font-size: 16px;
+    padding-bottom: 20px;
+    padding-top: 20px;
+}
+#screen {
+    margin-right: 20px;
+    margin-left: 20px;
+}
+.emojione {
+    min-height: 0;
+    min-width: 0;
+}
+#screen div div { display: inline-block; }
+div { line-height: 1.19em }
+div > span { padding-top: 2px; padding-bottom: 2px; }
+span { overflow: visible }
+
+.blink { animation: blinker 1s linear infinite }
+.bold { font-weight: bold }
+.italic { font-style: italic }
+.fast-blink { animation: blinker 0.3s linear infinite }
+.crossed-out { text-decoration: line-through }
+.underline {
+    /* text-decoration: underline; */
+    border-bottom: solid 1px;
+}
+.faint { opacity: 0.5 }
+.conceal { opacity: 0 }
+.cursor-blink { animation: cursor-blinker 1s ease-in-out infinite }
+.cursor-reverse-blink { animation: cursor-blinker-reverse 1s ease-in-out infinite }
+.cursor { background-color: rgb(203,204,205); color: rgb(0,0,0) }
+.cursor-reverse { background-color: rgb(0,0,0); color: rgb(203,204,205) }
+
+@keyframes cursor-blinker {
+    0% { background-color: rgb(203,204,205); color: rgb(0,0,0) }
+    50% { background-color: transparent; color: inherit }
+    100% { background-color: rgb(203,204,205); color: rgb(0,0,0)  }
+}
+
+@keyframes cursor-blinker-reverse {
+    0% { background-color: rgb(0,0,0); color: rgb(203,204,205) }
+    50% { background-color: transparent; color: inherit }
+    100% { background-color: rgb(0,0,0); color: rgb(203,204,205) }
+}
+
+.row-scroll-region-top    { box-shadow: inset 0px  4px 5px 0px rgba(255,255,255,0.3) }
+.row-scroll-region-bottom { box-shadow: inset 0px -4px 5px 0px rgba(255,255,255,0.3) }
+
+.row-normal { }
+.row-double-width { transform-origin: left; transform: scale(2, 1) }
+
+.row-top-half { transform-origin: left; transform: scale(2, 1); overflow: hidden }
+.row-top-half > div { transform-origin: left top; transform: scale(1, 2) }
+
+.row-bottom-half { transform-origin: left; transform: scale(2, 1); overflow: hidden }
+.row-bottom-half > div { transform-origin: left bottom; transform: scale(1, 2) }
+
+.emojione { margin: 0; height: 1em; }
+
+.text-color-0  {
+    color: rgb(0,0,0);
+    border-color: rgb(0,0,0);
+}
+.text-color-1  {
+    color: rgb(194,54,33);
+    border-color: rgb(194,54,33);
+    text-shadow:
+    -1px -1px 0 #bbb,
+    1px -1px 0 #bbb,
+    -1px  1px 0 #bbb,
+    1px  1px 0 #bbb,
+    0px -1px 0 #bbb,
+    1px  0px 0 #bbb,
+    -1px  0px 0 #bbb,
+    0px  1px 0 #bbb;
+}
+.text-color-2  {
+    color: rgb(37,188,36);
+    border-color: rgb(37,188,36);
+}
+.text-color-3  {
+    color: rgb(173,173,39);
+    border-color: rgb(173,173,39);
+}
+.text-color-4  {
+    color: rgb(73,46,225);
+    border-color: rgb(73,46,225);
+    text-shadow:
+    -1px -1px 0 #bbb,
+    1px -1px 0 #bbb,
+    -1px  1px 0 #bbb,
+    1px  1px 0 #bbb,
+    0px -1px 0 #bbb,
+    1px  0px 0 #bbb,
+    -1px  0px 0 #bbb,
+    0px  1px 0 #bbb;
+}
+.text-color-5  {
+    color: rgb(211,56,211);
+    border-color: rgb(211,56,211);
+}
+.text-color-6  {
+    color: rgb(51,187,200);
+    border-color: rgb(51,187,200);
+}
+.text-color-7  {
+    color: rgb(203,204,205);
+    border-color: rgb(203,204,205);
+}
+.text-color-8  {
+    color: rgb(129,131,131);
+    border-color: rgb(129,131,131);
+}
+.text-color-9  {
+    color: rgb(252,57,31);
+    border-color: rgb(252,57,31);
+    text-shadow:
+    -1px -1px 0 #bbb,
+    1px -1px 0 #bbb,
+    -1px  1px 0 #bbb,
+    1px  1px 0 #bbb,
+    0px -1px 0 #bbb,
+    1px  0px 0 #bbb,
+    -1px  0px 0 #bbb,
+    0px  1px 0 #bbb;
+}
+.text-color-10 {
+    color: rgb(49,231,34);
+    border-color: rgb(49,231,34);
+}
+.text-color-11 {
+    color: rgb(234,236,35);
+    border-color: rgb(234,236,35);
+}
+.text-color-12 {
+    color: rgb(88,51,255);
+    border-color: rgb(88,51,255);
+    text-shadow:
+    -1px -1px 0 #bbb,
+    1px -1px 0 #bbb,
+    -1px  1px 0 #bbb,
+    1px  1px 0 #bbb,
+    0px -1px 0 #bbb,
+    1px  0px 0 #bbb,
+    -1px  0px 0 #bbb,
+    0px  1px 0 #bbb;
+}
+.text-color-13 {
+    color: rgb(249,53,248);
+    border-color: rgb(249,53,248);
+}
+.text-color-14 {
+    color: rgb(20,240,240);
+    border-color: rgb(20,240,240);
+}
+.text-color-15 {
+    color: rgb(233,235,235);
+    border-color: rgb(233,235,235);
+}
+.background-color-transparent  { background-color: transparent }
+
+.background-color-0  { background-color: rgb(0,0,0)       }
+.background-color-1  { background-color: rgb(194,54,33)   }
+.background-color-2  { background-color: rgb(37,188,36)   }
+.background-color-3  { background-color: rgb(173,173,39)  }
+.background-color-4  { background-color: rgb(73,46,225)   }
+.background-color-5  { background-color: rgb(211,56,211)  }
+.background-color-6  { background-color: rgb(51,187,200)  }
+.background-color-7  { background-color: rgb(203,204,205) }
+.background-color-8  { background-color: rgb(129,131,131) }
+.background-color-9  { background-color: rgb(252,57,31)   }
+.background-color-10 { background-color: rgb(49,231,34)   }
+.background-color-11 { background-color: rgb(234,236,35)  }
+.background-color-12 { background-color: rgb(88,51,255)   }
+.background-color-13 { background-color: rgb(249,53,248)  }
+.background-color-14 { background-color: rgb(20,240,240)  }
+.background-color-15 { background-color: rgb(233,235,235) }
+
+/** Shimbun **/
+/* .text-color-0 { color: #303030 } */
+/* .text-color-1 { color: #be1137 } */
+/* .text-color-2 { color: #29732c } */
+/* .text-color-3 { color: #c95c26 } */
+/* .text-color-4 { color: #2a5aa2 } */
+/* .text-color-5 { color: #cd3a93 } */
+/* .text-color-6 { color: #078692 } */
+/* .text-color-7 { color: #d0d0d0 } */
+/* .background-color-0 { background-color: #303030 } */
+/* .background-color-1 { background-color: #be1137 } */
+/* .background-color-2 { background-color: #29732c } */
+/* .background-color-3 { background-color: #c95c26 } */
+/* .background-color-4 { background-color: #2a5aa2 } */
+/* .background-color-5 { background-color: #cd3a93 } */
+/* .background-color-6 { background-color: #078692 } */
+/* .background-color-7 { background-color: #d0d0d0 } */
+
+/* @keyframes cursor-blinker { */
+/*     0% { background-color: magenta; color: #d0d0d0 } */
+/* } */
+
+@keyframes blinker {
+    50% { opacity: 0 }
+}
