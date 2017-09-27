@@ -2,10 +2,13 @@
 
 もげRPGをブラウザで遊べるようにするもの。
 
+![スクリーンショット](screenshot.png)
+
 ## 1. 依存ライブラリをインストールする
 
     npm install
     bower install
+    gem install colorize sxp
 
 `mogerpg.exe` をリポジトリのディレクトリにコピーする。
 
