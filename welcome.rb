@@ -69,17 +69,15 @@ loop do
 
   case number
   when 1
-    system('clear')
     system("./mogerpg.exe")
+    puts
     show_choices
   when 2
     show_ranking
   when 3
-    system('clear')
+    puts
     puts("Bye!")
     break
-  when 4
-    system('bash')
   else
     puts('what?')
   end
