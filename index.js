@@ -9,16 +9,12 @@ console.log('Server started on port 8888')
 wss.on('connection', function connection(ws) {
   var term = pty.spawn('ruby', ["welcome.rb"], {
     name: 'xterm',
-    // name: 'dumb',
     cols: 80,
     rows: 24,
-    // cwd: process.env.HOME,
     env: process.env
   });
 
   term.on('data', function(data) {
-    // console.log(typeof(data));
-    // console.log(data.constructor);
     ws.send(data);
   });
 
