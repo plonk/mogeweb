@@ -19,10 +19,6 @@ body {
     margin-right: 20px;
     margin-left: 20px;
 }
-.emojione {
-    min-height: 0;
-    min-width: 0;
-}
 #screen div div { display: inline-block; }
 div { line-height: 1.19em }
 div > span { padding-top: 2px; padding-bottom: 2px; }
@@ -67,8 +63,6 @@ span { overflow: visible }
 
 .row-bottom-half { transform-origin: left; transform: scale(2, 1); overflow: hidden }
 .row-bottom-half > div { transform-origin: left bottom; transform: scale(1, 2) }
-
-.emojione { margin: 0; height: 1em; }
 
 .text-color-0  {
     color: rgb(0,0,0);

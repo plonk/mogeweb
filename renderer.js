@@ -104,7 +104,7 @@ function buildRowHtml(y) {
       var klass = cursorClass(receiver);
       str += `<span class="${klass}">`;
     }
-    str += emojione.unicodeToImage(escapeHtml(swapVariantSelectors(char)));
+    str += escapeHtml(swapVariantSelectors(char));
     if (cursor)
       str += '</span>';
     str += '</span>';
