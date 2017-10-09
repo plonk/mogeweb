@@ -143,7 +143,7 @@ function renderScreen() {
 
   $('#screen').html(buildScreenHtml());
 
-  setWindowTitle();
+  //setWindowTitle();
 
   if (windowNeedsResizing) {
     fitWindow();
