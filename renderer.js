@@ -326,7 +326,7 @@ function setup()
 {
   if (websocket)
     websocket.close();
-  websocket = new WebSocket('ws://localhost:8888/');
+  websocket = new WebSocket($WEB_SOCKET_URL);
   websocket.binaryType = 'arraybuffer';
   var term = {};
   term.write = function (str) {
