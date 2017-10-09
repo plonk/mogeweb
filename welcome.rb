@@ -34,7 +34,7 @@ def show_banner
   puts
   puts
   puts
-  puts_huge(" "*14 + "\u{2694} " +
+  puts_huge(" "*13 + "\u{2694} " +
             "もげ ".bold +
             "R".red +
             "P".red +
