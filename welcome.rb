@@ -18,8 +18,12 @@ end
 
 def show_ranking
   attrlist = load_ranking
-  attrlist.each.with_index(1) do |(name, time), i|
-    puts "%d. %s\t%s" % [i, name, fmt_time(time)]
+  if attrlist.empty?
+    puts "(データなし)"
+  else
+    attrlist.each.with_index(1) do |(name, time), i|
+      puts "%d. %s\t%s" % [i, name, fmt_time(time)]
+    end
   end
   puts
 end
