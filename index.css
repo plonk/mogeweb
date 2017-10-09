@@ -5,7 +5,7 @@ body {
 }
 
 #screen_outer {
-    font-family: "MS Gothic", "Noto Sans Mono CJK JP", "TakaoGothic", monospace;
+    font-family: "MS Gothic", "TakaoGothic", "Noto Sans Mono CJK JP", monospace;
     font-size: 16px;
     padding-bottom: 20px;
     padding-top: 20px;
