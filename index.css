@@ -22,9 +22,10 @@ body {
     min-height: 0;
     min-width: 0;
 }
-#screen div div { display: inline-block; }
-div { line-height: 1.19em }
-div > span { padding-top: 2px; padding-bottom: 2px; }
+#screen div span { display: inline-block; }
+div { line-height: 1.175 }
+/* div > span { padding-top: 2px; padding-bottom: 2px; } */
+div { padding: 0; margin: 0 }
 span { overflow: visible }
 
 .blink { animation: blinker 1s linear infinite }
