@@ -103,6 +103,8 @@ Transmitter.prototype.toCharacter = function (key, ctrlKey, altKey, shiftKey) {
       return APPLICATION_FUNCTION_KEY_TABLE[key];
   }
 
+  if (key == 'Backspace' && ctrlKey && altKey) { return '\x1b\x08'; }
+  if (key == 'Backspace' && ctrlKey) { return '\x08'; }
   if (CONTROL_CHARACTER_KEYS[key]) {
     return CONTROL_CHARACTER_KEYS[key];
   }
