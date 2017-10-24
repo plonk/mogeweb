@@ -16,7 +16,11 @@ wss.on('connection', function connection(ws) {
   });
 
   term.on('data', function(data) {
-    ws.send(data);
+    try {
+      ws.send(data);
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   term.on('close', function() {
