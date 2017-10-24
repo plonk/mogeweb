@@ -9,15 +9,20 @@ body {
     font-size: 16px;
     padding-bottom: 20px;
     padding-top: 20px;
-    width: 680px;
+/*    width: 680px; */
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
 }
 #screen {
-    width: 640px;
+/*    width: 640px; */
     margin-right: 20px;
     margin-left: 20px;
 }
+#canvas {
+    /* background-color: pink */
+}
+
 .emojione {
     min-height: 0;
     min-width: 0;

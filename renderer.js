@@ -67,6 +67,40 @@ function cursorClass(receiver) {
   return klass;
 }
 
+var COLORS = [
+  "rgb(0,0,0)",
+  "rgb(194,54,33)",
+  "rgb(37,188,36)",
+  "rgb(173,173,39)",
+  "rgb(73,46,225)",
+  "rgb(211,56,211)",
+  "rgb(51,187,200)",
+  "rgb(203,204,205)",
+  "rgb(129,131,131)",
+  "rgb(252,57,31)",
+  "rgb(49,231,34)",
+  "rgb(234,236,35)",
+  "rgb(88,51,255)",
+  "rgb(249,53,248)",
+  "rgb(20,240,240)",
+  "rgb(233,235,235)",
+];
+
+for (var r = 0; r <= 5; r++)
+  for (var g = 0; g <= 5; g++)
+    for (var b = 0; b <= 5; b++)
+      COLORS.push("rgb(" +
+                  Math.round(r*255/5) + "," +
+                  Math.round(g*255/5) + "," +
+                  Math.round(b*255/5) + ")");
+
+for (var i = 0; i < 24; i++) {
+  var intensity = 8 + i*10;
+  COLORS.push("rgb(" + intensity + "," + intensity + "," + intensity + ")");
+}
+
+console.log(COLORS);
+
 function buildRowHtml(y) {
   var str = '';
   var bgColor = null;
@@ -133,22 +167,125 @@ function setWindowTitle() {
   title.text = `matter ${alt} ${pos} ${scrollBack} - ${receiver.title}`;
 }
 
-function renderScreen() {
-  $('#screen_outer').removeClass();
-  if (receiver.reverseScreenMode) {
-    $('#screen_outer').addClass(`background-color-7`);
-  } else {
-    $('#screen_outer').addClass(`background-color-0`);
+function randomColor()
+{
+    var str = '#';
+    for (var i = 0; i < 3; i++) {
+        str += Math.floor(8 + Math.random() * 8).toString(16);
+    }
+    return str;
+}
+
+var getTextHeight = function(font) {
+  var text = $('<span>Hg</span>').css({ 'font': font });
+  var block = $('<div style="display: inline-block; width: 1px; height: 0px;"></div>');
+
+  var div = $('<div></div>');
+  div.append(text, block);
+
+  var body = $('body');
+  body.append(div);
+
+  try {
+
+    var result = {};
+
+    block.css({ verticalAlign: 'baseline' });
+    result.ascent = block.offset().top - text.offset().top;
+
+    block.css({ verticalAlign: 'bottom' });
+    result.height = block.offset().top - text.offset().top;
+
+    result.descent = result.height - result.ascent;
+
+  } finally {
+    div.remove();
   }
 
-  $('#screen').html(buildScreenHtml());
+  return result;
+};
 
-  //setWindowTitle();
+function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMetrics) {
+  // $('#screen_outer').removeClass();
+  // if (receiver.reverseScreenMode) {
+  //   $('#screen_outer').addClass(`background-color-7`);
+  // } else {
+  //   $('#screen_outer').addClass(`background-color-0`);
+  // }
 
-  if (windowNeedsResizing) {
-    fitWindow();
-    windowNeedsResizing = false;
+  var fontHeight = fontHeightMetrics.height;
+  var fontAscent = fontHeightMetrics.ascent;
+  var yoffset = Math.round((fontHeight - fontAscent)/2);
+
+  ctx.clearRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
+  // ctx.fillStyle = "rgba(17,17,17,0.2)";
+  // ctx.fillRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
+
+  for (var y = 0; y < receiver.rows; y++) {
+    for (var x  = 0; x < receiver.columns; x++) {
+      var cell = receiver.buffer.getCellAt(y, x);
+      var char = cell.character;
+      var cursor = (y === receiver.cursor_y &&
+                    x === receiver.cursor_x &&
+                    receiver.isCursorVisible &&
+                    receiver.buffer.getScrollBackOffset() === 0);
+
+      if (!cursor &&
+          !cell.attrs.backgroundColor &&
+          (char === "" || char === " "))
+        continue;
+
+      if (cursor) {
+        if (window_focused) {
+          ctx.fillStyle = 'magenta';
+          ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
+                       halfWidthInPixels * wcwidth(char), fontHeight);
+        } else {
+          ctx.fillStyle = 'magenta';
+          var strokeWidth = 2;
+          ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // top
+                       halfWidthInPixels * wcwidth(char), strokeWidth);
+          ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // left
+                       strokeWidth, fontHeight);
+          ctx.fillRect(x * halfWidthInPixels, (y+1) * fontHeight - strokeWidth, // bottom
+                       halfWidthInPixels * wcwidth(char), strokeWidth);
+          ctx.fillRect((x+1) * halfWidthInPixels - strokeWidth, y * fontHeight,
+                       strokeWidth, fontHeight);
+        }
+      } else {
+        if (cell.attrs.backgroundColor) {
+          ctx.fillStyle = COLORS[cell.attrs.backgroundColor];
+          ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
+                       halfWidthInPixels * wcwidth(char), fontHeight);
+        }
+      }
+      var fg;
+      if (cell.attrs.textColor !== null)
+        fg = cell.attrs.textColor;
+      else
+        fg = receiver.getDefaultTextColor();
+      if (cell.attrs.bold)
+        fg += 8;
+      ctx.fillStyle = COLORS[fg];
+
+      var xoffset = (wcwidth(char) == 1) ? 0 : Math.floor(Math.max(0,halfWidthInPixels*2 - doubleWidthInPixels)/2);
+      var maxWidth = wcwidth(char)*halfWidthInPixels;
+      if (cell.attrs.bold) {
+        ctx.fillText(char, xoffset + x*halfWidthInPixels + 0.5, yoffset + y * fontHeight, maxWidth);
+      }
+      ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
+      ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
+      if (wcwidth(char) == 2)
+        x++;
+    }
   }
+
+  // //setWindowTitle();
+
+  // if (windowNeedsResizing) {
+  //   fitWindow();
+  //   windowNeedsResizing = false;
+  // }
 }
 
 function buildRowClasses(y) {
@@ -172,89 +309,10 @@ function buildScreenHtml() {
   return str;
 }
 
-// var commandLine = remote.getCurrentWindow().commandLine;
-
-// var term = pty.spawn(commandLine[0], commandLine.slice(1), {
-//   name: 'xterm',
-//   cols: 80,
-//   rows: 24,
-//   cwd: process.cwd(),
-//   env: process.env
-// });
-
-// term.on('data', function(data) {
-//   var _data = Array.from(data);
-
-//   if (!receiver.smoothScrollMode) {
-//     receiver.feed(_data);
-//     renderScreen();
-//     return;
-//   }
-
-//   term.pause();
-//   function iter(index) {
-//     while (true) {
-//       if (index === _data.length) {
-//         renderScreen();
-//         term.resume();
-//         return;
-//       } else {
-//         var char = _data[index];
-
-//         receiver.feed(char);
-//         if (receiver.smoothScrollMode && receiver.buffer.scrollPerformed) {
-//           setTimeout(() => {
-//             // console.log(Date.now());
-//             renderScreen();
-//             iter(index + 1);
-//           }, 0); // どの道、レンダリングに百数十ミリ秒かかるのでタイムアウトを設定しない。
-//           return;
-//         } else {
-//           index += 1;
-//         }
-//       }
-//     }
-//   }
-//   iter(0);
-// });
-
-// term.on('close', function () {
-//   window.close();
-// });
-
 var windowNeedsResizing = false;
 var beepAudio = new Audio('beep.wav');
 var ignoreResizeEventOnce = false;
 
-// var receiver = new Receiver(term.cols, term.rows, {
-//   write: (data) => term.write(data),
-//   resize: (cols, rows) => {
-//     term.resize(cols, rows);
-//     windowNeedsResizing = true;
-//   },
-//   cursorKeyMode: (mode) => {
-//     transmitter.cursorKeyMode = mode;
-//   },
-//   beep: () => {
-//     beepAudio.play();
-//   }
-// });
-
-// function adjustWindowHeight() {
-//   var height = $('#screen').height() + 25;
-
-//   ipcRenderer.send('adjust-window-height', height);
-// }
-
-// function adjustWindowWidth() {
-//   var minWidth = 1000;
-
-//   $('#screen #row-0 div').each(function () {
-//     minWidth = Math.min($(this).width(), minWidth);
-//   });
-
-//   ipcRenderer.send('adjust-window-width', minWidth);
-// }
 var modalShown = false;
 
 function showInputModal() {
@@ -270,13 +328,13 @@ function enterText() {
   if (text === '') return;
 
   transmitter.paste(text);
-  renderScreen();
+  //renderScreen();
   $('#inputModal').modal('hide');
 }
 
 function paste() {
   transmitter.paste(clipboard.readText());
-  renderScreen();
+  //renderScreen();
 }
 
 function copy() {
@@ -315,15 +373,23 @@ function fitScreen() {
   var nRows = Math.ceil((windowHeight - 65) / lineHeight);
 
   receiver.setScreenSize(nColumns, nRows);
-  renderScreen();
+  //renderScreen();
 }
 
 var receiver;
 var transmitter;
 var websocket;
+var window_focused = true;
+var force_redraw = false;
 
 function setup()
 {
+  window.onbeforeunload = function (e) {
+    // 最近のブラウザでは、ここで設定した文字列は表示されない。
+    e.returnValue = "閉じますか？";
+    return "閉じますか？";
+  };
+
   if (websocket)
     websocket.close();
   websocket = new WebSocket($WEB_SOCKET_URL);
@@ -333,13 +399,10 @@ function setup()
     websocket.send(str);
   };
   transmitter = new Transmitter(term);
+  var inBuffer = [];
   var utf8decoder;
   websocket.onmessage = function (event) {
-    // var cary = Array.from(utf8decoder.decode(event.data, { stream: true }));
-    // receiver.feed(cary);
-
-    receiver.feed(Array.from(event.data));
-    renderScreen();
+    inBuffer = inBuffer.concat( Array.from(event.data) );
   };
 
   websocket.onopen = function (event) {
@@ -352,23 +415,113 @@ function setup()
     $('#indicator-online').hide();
     $('#indicator-offline').show();
   };
+
+  var fontSpec = '16px Courier New';
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.font = fontSpec;
+  var letterWidthInPixels = ctx.measureText("m").width;
+  var kanjiWidthInPixels = ctx.measureText("漢").width;
+  var fontHeight = getTextHeight(ctx.font);
+  var frame = 0;
+
+  $('#canvas')[0].width = letterWidthInPixels * 80;
+  $('#canvas')[0].height = fontHeight.height * 24;
+
+  ctx.font = fontSpec;
+  ctx.textBaseline = "top";
+  var render = function() {
+    if (frame % 1 == 0) {
+      if (inBuffer.length !== 0 || force_redraw) {
+        force_redraw = false;
+        //var n = Math.min(100, inBuffer.length);
+        var n = inBuffer.length;
+        var chunk = inBuffer.splice(0, n);
+        receiver.feed(chunk);
+        renderScreen(ctx, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
+      }
+    }
+    frame++;
+    window.requestAnimationFrame(render)
+  };
+  window.requestAnimationFrame(render);
 }
 
 window.onload = () => {
+  var ctrlJustPressed = false;
+  var stickyCtrl = false;
+  var ctrlLock = false;
+
+  function switchStickyCtrl(flag) {
+    if (flag) {
+      $('#indicator-sticky').show();
+      $('#indicator-no-sticky').hide();
+      stickyCtrl = true;
+    } else {
+      $('#indicator-sticky').hide();
+      $('#indicator-no-sticky').show();
+      stickyCtrl = false;
+    }
+  }
+
+  function switchCtrlLock(flag) {
+    if (flag) {
+      $('#indicator-lock').show();
+      $('#indicator-no-lock').hide();
+      ctrlLock = true;
+    } else {
+      $('#indicator-lock').hide();
+      $('#indicator-no-lock').show();
+      ctrlLock = false;
+    }
+  }
+
+  $(document).keyup((e) => {
+    if (e.key === "Control" && ctrlJustPressed) {
+      if (ctrlLock) {
+        switchCtrlLock(false);
+      } else if (!stickyCtrl) {
+        switchStickyCtrl(true);
+      } else {
+        switchCtrlLock(true);
+        switchStickyCtrl(false);
+      }
+      ctrlJustPressed = false;
+    }
+  });
+
   $(document).keydown((e) => {
+    if (e.key === "Control") {
+        ctrlJustPressed = true;
+      return;
+    } else {
+      ctrlJustPressed = false;
+    }
+
+    if (e.key === 'F12') // デベロッパーツールズ
+      return;
+
     if (!modalShown) {
       e.preventDefault();
 
       var scrollAmount = receiver.rows;
       if (e.key === 'PageUp' && e.shiftKey) {
         receiver.scrollBack(scrollAmount);
-        renderScreen();
+        //renderScreen();
       } else if (e.key === 'PageDown' && e.shiftKey){
         receiver.scrollBack(-scrollAmount);
-        renderScreen();
+        //renderScreen();
       } else {
-        if (transmitter)
+        if (transmitter) {
+          if (stickyCtrl) {
+            e.ctrlKey = true;
+            switchStickyCtrl(false);
+          }
+          if (ctrlLock) {
+            e.ctrlKey = true;
+          }
           transmitter.typeIn(e);
+        }
       }
     }
   });
@@ -411,6 +564,16 @@ window.onload = () => {
 
   // ------------------------------------------------------------
 
-  renderScreen();
+  //renderScreen();
   // fitWindow();
+
+  window.onblur = function (e) {
+    window_focused = false;
+    force_redraw = true;
+  };
+
+  window.onfocus = function (e) {
+    window_focused = true;
+    force_redraw = true;
+  };
 };

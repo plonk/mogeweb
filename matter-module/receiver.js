@@ -289,6 +289,7 @@ Receiver.prototype.scrollBack = function (n) {
 
 // 画面のクリア。カーソル位置はそのまま。
 Receiver.prototype.clear = function (from, to) {
+  // XXX: 文字属性のコピーは？
   for (var i = from; i < to; i++) {
     this.buffer.setCellAtOffset(i, new Cell());
   }
@@ -332,14 +333,14 @@ Receiver.prototype.cursorPosition = function (args_str) {
 Receiver.prototype.eraseDisplay = function (args_str) {
   switch (args_str || '0') {
   case '0':
-    this.buffer.clearToEnd(this.cursor_y, this.cursor_x);
+    this.buffer.clearToEnd(this.cursor_y, this.cursor_x, this.graphicAttrs);
     break;
   case '1':
     // カーソル位置を含む
-    this.buffer.clearFromBeginning(this.cursor_y, this.cursor_x);
+    this.buffer.clearFromBeginning(this.cursor_y, this.cursor_x, this.graphicAttrs);
     break;
   case '2':
-    this.buffer.clearAll();
+    this.buffer.clearAll(this.graphicAttrs);
     break;
   case '3': // xterm; erase saved lines
     console.log('erase saved lines');
@@ -452,8 +453,24 @@ Receiver.prototype.selectGraphicRendition = function (args_str) {
     } else if (arg >= 40 && arg <= 47) {
       this.graphicAttrs.backgroundColor = arg - 40;
       i++;
+    } else if (arg === 48) {
+      i++;
+      if (args[i] === 5) {
+        i++;
+        this.graphicAttrs.backgroundColor = args[i];
+        i++;
+      } else {
+        console.log("Unsupported SGR 48 spec.");
+        return;
+      }
     } else if (arg === 49) {
       this.sgr_defaultBackgroundColor();
+      i++;
+    } else if (arg >= 90 && arg <= 97) {
+      this.graphicAttrs.textColor = arg - 82;
+      i++;
+    } else if (arg >= 100 && arg <= 107) {
+      this.graphicAttrs.backgroundColor = arg - 92;
       i++;
     } else {
       console.log(`unknown SGR arg ${args[i]}`);
@@ -554,7 +571,7 @@ Receiver.prototype.deleteCharacters = function (args_str) {
   for (var offset = (this.cursor_y + 1) * this.columns - num;
        offset < (this.cursor_y + 1) * this.columns;
        offset++) {
-    this.buffer.setCellAtOffset(offset, new Cell());
+    this.buffer.setCellAtOffset(offset, new Cell({attrs: this.graphicAttrs})); // 文字属性要る？
   }
 };
 
@@ -608,11 +625,11 @@ Receiver.prototype.insertBlankCharacters = function (args_str) {
 };
 
 Receiver.prototype.scrollDown = function (y1, y2, nlines) {
-  this.buffer.scrollDown(y1, y2, nlines);
+  this.buffer.scrollDown(y1, y2, nlines, this.graphicAttrs);
 };
 
 Receiver.prototype.scrollUp = function (y1, y2, nlines) {
-  this.buffer.scrollUp(y1, y2, nlines);
+  this.buffer.scrollUp(y1, y2, nlines, this.graphicAttrs);
 };
 
 Receiver.prototype.insertLines = function (args_str) {
@@ -828,7 +845,7 @@ Receiver.prototype.doPrivateModeSet = function (num) {
   case 1049:
     this.saveCursor();
     this.useAlternateScreenBuffer();
-    this.buffer.clearAll();
+    this.buffer.clearAll(this.graphicAttrs);
     break;
   default:
     console.log(`CSI ? ${num} h`);

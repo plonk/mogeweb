@@ -119,8 +119,11 @@ Row.prototype.setCellAt = function (index, cell) {
   this.array[index] = cell;
 };
 
-Row.prototype.clear = function () {
-  this.array = [];
+Row.prototype.clear = function (columns, attrs) {
+  for (var i = 0; i < columns; i++) {
+    this.array[i] = new Cell();
+    this.array[i].attrs = attrs.clone();
+  }
   this.setType('normal');
 };
 
@@ -130,7 +133,7 @@ Row.prototype.toString = function () {
   for (var i = 0; i < this.array.length; i++) {
     str += this.getCellAt(i).character;
   }
-  
+
   return str.trimRight();
 };
 
@@ -225,22 +228,24 @@ function spliceArray(ary, start, deleteCount, ary2) {
 };
 
 // 範囲 は [y1, y2]。y2を含む。
-ScreenBuffer.prototype.scrollDown = function (y1, y2, nlines) {
+ScreenBuffer.prototype.scrollDown = function (y1, y2, nlines, attrs) {
   for (var i = y2 - nlines; i >= y1; i--) {
     this.setLine(i + nlines, this.getLine(i));
   }
 
   for (var j = y1; j < y1 + nlines; j++) {
-    this.setLine(j, new Row());
+    var row = new Row();
+    row.clear(this.columns, attrs);
+    this.setLine(j, row);
   }
 
   this.scrollPerformed = true;
 };
 
 // METHOD: scrollUp(y1, y2, nlines)
-ScreenBuffer.prototype.scrollUp = function (y1, y2, nlines) {
+ScreenBuffer.prototype.scrollUp = function (y1, y2, nlines, attrs) {
   if (y1 === 0 && y2 === this.rows - 1) {
-    this.softScrollUp(nlines);
+    this.softScrollUp(nlines, attrs);
     return;
   }
 
@@ -249,15 +254,19 @@ ScreenBuffer.prototype.scrollUp = function (y1, y2, nlines) {
   }
 
   for (var j = y2 - nlines + 1; j < y2 + 1; j++) {
-    this.setLine(j, new Row());
+    var row = new Row()
+    row.clear(this.columns, attrs);
+    this.setLine(j, row);
   }
 
   this.scrollPerformed = true;
 };
 
-ScreenBuffer.prototype.softScrollUp = function (nlines) {
+ScreenBuffer.prototype.softScrollUp = function (nlines, attrs) {
   for (var i = 0; i < nlines; i++) {
-    this._buffer.unshift(new Row());
+    var row = new Row();
+    row.clear(this.columns, attrs);
+    this._buffer.unshift(row);
   }
 }
 
@@ -270,8 +279,8 @@ ScreenBuffer.prototype.getLine = function (index) {
   if (indexIntoCBuffer < 0 ||
       indexIntoCBuffer >= this._buffer.length) {
     throw new RangeError(`indexIntoCBuffer = ${indexIntoCBuffer}`);
-  } 
-  
+  }
+
   return this._buffer.get(indexIntoCBuffer);
 }
 
@@ -319,25 +328,27 @@ ScreenBuffer.prototype.clone = function () {
   return newBuffer;
 };
 
-ScreenBuffer.prototype.clearToEnd = function (y, x) {
+ScreenBuffer.prototype.clearToEnd = function (y, x, attrs) {
   if (x !== 0) {
     for (var i = x; i < this.columns; i++) {
-      this.getLine(y).setCellAt(i, new Cell());
+      var cell = new Cell();
+      cell.attrs = attrs.clone();
+      this.getLine(y).setCellAt(i, cell);
     }
-    if (y === this.rows - 1)
-      return;
     y += 1;
   }
 
   for (var j = y; j < this.rows; j++) {
-    this.getLine(j).clear();
+    this.getLine(j).clear(this.columns, attrs);
   }
 };
 
-ScreenBuffer.prototype.clearFromBeginning = function (y, x) {
+ScreenBuffer.prototype.clearFromBeginning = function (y, x, attrs) {
   if (x !== this.columns - 1) {
     for (var i = 0; i <= x; i++) {
-      this.getLine(y).setCellAt(i, new Cell());
+      var cell = new Cell();
+      cell.attrs = attrs.clone();
+      this.getLine(y).setCellAt(i, cell);
     }
     if (y === 0)
       return;
@@ -345,13 +356,13 @@ ScreenBuffer.prototype.clearFromBeginning = function (y, x) {
   }
 
   for (var j = 0; j <= y; j++) {
-    this.getLine(j).clear();
+    this.getLine(j).clear(this.columns, attrs);
   }
 };
 
-ScreenBuffer.prototype.clearAll = function () {
+ScreenBuffer.prototype.clearAll = function (attrs) {
   for (var i = 0; i < this.rows; i++) {
-    this.getLine(i).clear();
+    this.getLine(i).clear(this.columns, attrs);
   }
 };
 

@@ -22,20 +22,17 @@
     <link rel="stylesheet" href="https://bootswatch.com/slate/bootstrap.min.css">
     <!-- <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css"> -->
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-      <script src="node_modules/CBuffer/cbuffer.js"></script>
-      <script src="node_modules/eastasianwidth/eastasianwidth.js"></script>
-      <script src="screenBuffer.js"></script>
-    <script src="receiver.js"></script>
-
-    <script src="transmitter.js"></script>
-    <script src="util.js"></script>
+    <script src="node_modules/CBuffer/cbuffer.js"></script>
+    <script src="node_modules/eastasianwidth/eastasianwidth.js"></script>
+    <script src="matter-module/matter-module.js"></script>
     <script src="config.js"></script>
     <script src="renderer.js"></script>
     <link rel="stylesheet" href="index.css">
   </head>
   <body style="background-color: #111">
-    <div id="screen_outer"><div id="screen"></div></div>
+    <div id="screen_outer">
+      <canvas id="canvas" width=640 height=384></canvas>
+    </div>
 
     <style>
      .long-button { min-width: 100px; font-size: 13px; letter-spacing: 1px; color: #eee }
@@ -45,6 +42,12 @@
       <span id="indicator-offline" style="font-size: 20px; color: #333">●</span>
       <span id="indicator-online" style="display: none; text-shadow: 0px 0px 10px red; font-size: 20px; color: #f10">●</span>
       <span style="margin-right: 0.5em; ">ON LINE</span>
+      <span id="indicator-no-sticky" style="font-size: 20px; color: #333">●</span>
+      <span id="indicator-sticky" style="display: none; text-shadow: 0px 0px 10px red; font-size: 20px; color: #f10">●</span>
+      <span style="margin-right: 0.5em; ">STICKY</span>
+      <span id="indicator-no-lock" style="font-size: 20px; color: #333">●</span>
+      <span id="indicator-lock" style="display: none; text-shadow: 0px 0px 10px red; font-size: 20px; color: #f10">●</span>
+      <span style="margin-right: 0.5em; ">CTRL LOCK</span>
       <button id="connect-button" class="btn btn-default long-button">CONNECT</button>
       <button id="input-button" class="btn btn-default long-button">INPUT</button>
       <br>
