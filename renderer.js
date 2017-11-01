@@ -206,22 +206,36 @@ var getTextHeight = function(font) {
 };
 
 function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMetrics) {
-  // $('#screen_outer').removeClass();
-  // if (receiver.reverseScreenMode) {
-  //   $('#screen_outer').addClass(`background-color-7`);
-  // } else {
-  //   $('#screen_outer').addClass(`background-color-0`);
-  // }
+  // if (receiver.reverseScreenMode) {}
 
   var fontHeight = fontHeightMetrics.height;
   var fontAscent = fontHeightMetrics.ascent;
   var yoffset = Math.round((fontHeight - fontAscent)/2);
 
-  ctx.clearRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
-  // ctx.fillStyle = "rgba(17,17,17,0.2)";
-  // ctx.fillRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
+  function renderRow(y) {
+    ctx.save();
+    switch (receiver.buffer.getLine(y).getType()) {
+    case 'double-width':
+      ctx.scale(2,1);
+      break;
+    case 'top-half':
+      ctx.beginPath();
+      ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
+      ctx.clip();
+      ctx.translate(0, -y*fontHeight);
+      ctx.scale(2,2);
+      break;
+    case 'bottom-half':
+      ctx.beginPath();
+      ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
+      ctx.clip();
+      ctx.translate(0, -y*fontHeight);
+      ctx.scale(2,2);
 
-  for (var y = 0; y < receiver.rows; y++) {
+      ctx.translate(0, -fontHeight/2);
+      break;
+    }
+
     for (var x  = 0; x < receiver.columns; x++) {
       var cell = receiver.buffer.getCellAt(y, x);
       var char = cell.character;
@@ -229,26 +243,24 @@ function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMet
                     x === receiver.cursor_x &&
                     receiver.isCursorVisible &&
                     receiver.buffer.getScrollBackOffset() === 0);
+      var width = wcwidth(char);
 
-      if (!cursor &&
-          !cell.attrs.backgroundColor &&
-          (char === "" || char === " "))
-        continue;
+      // 何も描画しなくていいセルだったらスキップ。
 
       if (cursor) {
         if (window_focused) {
           ctx.fillStyle = 'magenta';
           ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
-                       halfWidthInPixels * wcwidth(char), fontHeight);
+                       halfWidthInPixels * width, fontHeight);
         } else {
           ctx.fillStyle = 'magenta';
           var strokeWidth = 2;
           ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // top
-                       halfWidthInPixels * wcwidth(char), strokeWidth);
+                       halfWidthInPixels * width, strokeWidth);
           ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // left
                        strokeWidth, fontHeight);
           ctx.fillRect(x * halfWidthInPixels, (y+1) * fontHeight - strokeWidth, // bottom
-                       halfWidthInPixels * wcwidth(char), strokeWidth);
+                       halfWidthInPixels * width, strokeWidth);
           ctx.fillRect((x+1) * halfWidthInPixels - strokeWidth, y * fontHeight,
                        strokeWidth, fontHeight);
         }
@@ -256,36 +268,41 @@ function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMet
         if (cell.attrs.backgroundColor) {
           ctx.fillStyle = COLORS[cell.attrs.backgroundColor];
           ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
-                       halfWidthInPixels * wcwidth(char), fontHeight);
+                       halfWidthInPixels * width, fontHeight);
         }
       }
-      var fg;
-      if (cell.attrs.textColor !== null)
-        fg = cell.attrs.textColor;
-      else
-        fg = receiver.getDefaultTextColor();
-      if (cell.attrs.bold)
-        fg += 8;
-      ctx.fillStyle = COLORS[fg];
 
-      var xoffset = (wcwidth(char) == 1) ? 0 : Math.floor(Math.max(0,halfWidthInPixels*2 - doubleWidthInPixels)/2);
-      var maxWidth = wcwidth(char)*halfWidthInPixels;
-      if (cell.attrs.bold) {
-        ctx.fillText(char, xoffset + x*halfWidthInPixels + 0.5, yoffset + y * fontHeight, maxWidth);
+      if (char !== "" && char !== " ") {
+        var fg;
+        if (cell.attrs.textColor !== null)
+          fg = cell.attrs.textColor;
+        else
+          fg = receiver.getDefaultTextColor();
+        if (cell.attrs.bold)
+          fg += 8;
+        ctx.fillStyle = COLORS[fg];
+
+        var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidthInPixels*2 - doubleWidthInPixels)/2);
+        var maxWidth = width*halfWidthInPixels;
+        if (cell.attrs.bold) {
+          ctx.fillText(char, xoffset + x*halfWidthInPixels + 0.5, yoffset + y * fontHeight, maxWidth);
+        }
+        ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
+        ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
       }
-      ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
-      ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
-      if (wcwidth(char) == 2)
+
+      if (width == 2)
         x++;
     }
+
+    ctx.restore();
   }
 
-  // //setWindowTitle();
+  ctx.clearRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
 
-  // if (windowNeedsResizing) {
-  //   fitWindow();
-  //   windowNeedsResizing = false;
-  // }
+  for (var y = 0; y < receiver.rows; y++) {
+    renderRow(y);
+  }
 }
 
 function buildRowClasses(y) {
@@ -402,7 +419,11 @@ function setup()
   var inBuffer = [];
   var utf8decoder;
   websocket.onmessage = function (event) {
-    inBuffer = inBuffer.concat( Array.from(event.data) );
+    var t0 = performance.now();
+    receiver.feed(event.data);
+    // console.log([performance.now() - t0, event.data.length]);
+    force_redraw = true;
+    // inBuffer.push(event.data);
   };
 
   websocket.onopen = function (event) {
@@ -416,7 +437,7 @@ function setup()
     $('#indicator-offline').show();
   };
 
-  var fontSpec = '16px Courier New';
+  var fontSpec = '20px Courier New';
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
   ctx.font = fontSpec;
@@ -432,12 +453,8 @@ function setup()
   ctx.textBaseline = "top";
   var render = function() {
     if (frame % 1 == 0) {
-      if (inBuffer.length !== 0 || force_redraw) {
+      if (force_redraw) {
         force_redraw = false;
-        //var n = Math.min(100, inBuffer.length);
-        var n = inBuffer.length;
-        var chunk = inBuffer.splice(0, n);
-        receiver.feed(chunk);
         renderScreen(ctx, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
       }
     }
