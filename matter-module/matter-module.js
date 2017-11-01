@@ -1440,7 +1440,9 @@ Receiver.prototype.cs_lineDrawing = function (c) {
 };
 
 function isControl(c) {
-  return isTrue(/^[\x00-\x1f\x7f]$/.exec(c));
+  //return isTrue(/^[\x00-\x1f\x7f]$/.exec(c));
+  var cp = c.codePointAt(0);
+  return (cp >= 0 && cp <= 0x1f) || cp == 0x7f;
 }
 
 function isTrue(value) {
