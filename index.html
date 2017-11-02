@@ -30,8 +30,9 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body style="background-color: #111">
-    <div id="screen_outer">
-      <canvas id="canvas" width=640 height=384></canvas>
+    <div id="screen-outer" style="position: relative">
+      <canvas id="bottom-layer" style="position: absolute; left: 0; top: 0; z-index: 0" width=640 height=384></canvas>
+      <canvas id="top-layer"    style="position: absolute; left: 0; top: 0; z-index: 1" width=640 height=384></canvas>
     </div>
 
     <style>

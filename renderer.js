@@ -93,64 +93,10 @@ for (var r = 0; r <= 5; r++)
                   Math.round(r*255/5) + "," +
                   Math.round(g*255/5) + "," +
                   Math.round(b*255/5) + ")");
-
+// グレースケール。
 for (var i = 0; i < 24; i++) {
   var intensity = 8 + i*10;
   COLORS.push("rgb(" + intensity + "," + intensity + "," + intensity + ")");
-}
-
-console.log(COLORS);
-
-function buildRowHtml(y) {
-  var str = '';
-  var bgColor = null;
-
-  for (var x  = 0; x < receiver.columns; x++) {
-    var cell = receiver.buffer.getCellAt(y, x);
-    var char = cell.character;
-
-    var newBgColor;
-    if (cell.attrs.reverseVideo) {
-      newBgColor = orElse(cell.attrs.textColor, receiver.getDefaultTextColor())
-    } else {
-      newBgColor = orElse(cell.attrs.backgroundColor, 'transparent');
-    }
-
-    if (bgColor !== newBgColor) {
-      if (bgColor !== null) {
-        str += "</span>";
-      }
-      bgColor = newBgColor;
-      str += createBgStartTag(bgColor);
-    }
-
-    if (cell.attrs.fraktur) {
-      char = toFraktur(char);
-    }
-
-    var cursor = (y === receiver.cursor_y &&
-                  x === receiver.cursor_x &&
-                  receiver.isCursorVisible &&
-                  receiver.buffer.getScrollBackOffset() === 0);
-
-    str += createFgStartTag(cell.attrs, cursor);
-    if (cursor) {
-      var klass = cursorClass(receiver);
-      str += `<span class="${klass}">`;
-    }
-    str += emojione.unicodeToImage(escapeHtml(swapVariantSelectors(char)));
-    if (cursor)
-      str += '</span>';
-    str += '</span>';
-  }
-  str += '</span>';
-  return str;
-}
-
-function renderRow(y) {
-  var row = $(`#row-${y} > div`);
-
-  row.html(buildRowHtml(y));
 }
 
 function formatPosition(y, x) {
@@ -176,7 +122,7 @@ function randomColor()
     return str;
 }
 
-var getTextHeight = function(font) {
+function getTextHeight(font) {
   var text = $('<span>Hg</span>').css({ 'font': font });
   var block = $('<div style="display: inline-block; width: 1px; height: 0px;"></div>');
 
@@ -203,92 +149,61 @@ var getTextHeight = function(font) {
   }
 
   return result;
-};
+}
 
-function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMetrics) {
-  // if (receiver.reverseScreenMode) {}
+function setRowClipAndTransform(y, fontHeight, halfWidthInPixels, type) {
+  switch (type) {
+  case 'double-width':
+    ctx.scale(2,1);
+    break;
+  case 'top-half':
+    ctx.beginPath();
+    ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
+    ctx.clip();
+    ctx.translate(0, -y*fontHeight);
+    ctx.scale(2,2);
+    break;
+  case 'bottom-half':
+    ctx.beginPath();
+    ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
+    ctx.clip();
+    ctx.translate(0, -y*fontHeight);
+    ctx.scale(2,2);
 
-  var fontHeight = fontHeightMetrics.height;
-  var fontAscent = fontHeightMetrics.ascent;
-  var yoffset = Math.round((fontHeight - fontAscent)/2);
+    ctx.translate(0, -fontHeight/2);
+    break;
+  }
+}
+
+function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
+  var defaultBackgroundColorIndex = (receiver.reverseScreenMode) ? 7 : 0;
+  var yoffset = Math.round((metrics.height - metrics.ascent)/2);
 
   function renderRow(y) {
     ctx.save();
-    switch (receiver.buffer.getLine(y).getType()) {
-    case 'double-width':
-      ctx.scale(2,1);
-      break;
-    case 'top-half':
-      ctx.beginPath();
-      ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
-      ctx.clip();
-      ctx.translate(0, -y*fontHeight);
-      ctx.scale(2,2);
-      break;
-    case 'bottom-half':
-      ctx.beginPath();
-      ctx.rect(0, y*fontHeight, halfWidthInPixels*receiver.columns, fontHeight);
-      ctx.clip();
-      ctx.translate(0, -y*fontHeight);
-      ctx.scale(2,2);
-
-      ctx.translate(0, -fontHeight/2);
-      break;
-    }
+    setRowClipAndTransform(y, metrics.height, halfWidth, receiver.buffer.getLine(y).getType());
 
     for (var x  = 0; x < receiver.columns; x++) {
       var cell = receiver.buffer.getCellAt(y, x);
       var char = cell.character;
-      var cursor = (y === receiver.cursor_y &&
-                    x === receiver.cursor_x &&
-                    receiver.isCursorVisible &&
-                    receiver.buffer.getScrollBackOffset() === 0);
+      var attrs = cell.attrs;
       var width = wcwidth(char);
+      var bg = attrs.backgroundColor ? attrs.backgroundColor : defaultBackgroundColorIndex;
+      var fg = attrs.textColor !== null ? attrs.textColor : receiver.getDefaultTextColor();
 
-      // 何も描画しなくていいセルだったらスキップ。
-
-      if (cursor) {
-        if (window_focused) {
-          ctx.fillStyle = 'magenta';
-          ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
-                       halfWidthInPixels * width, fontHeight);
-        } else {
-          ctx.fillStyle = 'magenta';
-          var strokeWidth = 2;
-          ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // top
-                       halfWidthInPixels * width, strokeWidth);
-          ctx.fillRect(x * halfWidthInPixels, y * fontHeight, // left
-                       strokeWidth, fontHeight);
-          ctx.fillRect(x * halfWidthInPixels, (y+1) * fontHeight - strokeWidth, // bottom
-                       halfWidthInPixels * width, strokeWidth);
-          ctx.fillRect((x+1) * halfWidthInPixels - strokeWidth, y * fontHeight,
-                       strokeWidth, fontHeight);
-        }
-      } else {
-        if (cell.attrs.backgroundColor) {
-          ctx.fillStyle = COLORS[cell.attrs.backgroundColor];
-          ctx.fillRect(x * halfWidthInPixels, y * fontHeight,
-                       halfWidthInPixels * width, fontHeight);
-        }
+      if (attrs.reverseVideo) {
+        var tmp = bg; bg = fg; fg = tmp;
       }
 
-      if (char !== "" && char !== " ") {
-        var fg;
-        if (cell.attrs.textColor !== null)
-          fg = cell.attrs.textColor;
-        else
-          fg = receiver.getDefaultTextColor();
-        if (cell.attrs.bold)
-          fg += 8;
-        ctx.fillStyle = COLORS[fg];
+      ctx.fillStyle = COLORS[bg];
+      ctx.fillRect(x * halfWidth, y * metrics.height,
+                   halfWidth * width, metrics.height);
 
-        var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidthInPixels*2 - doubleWidthInPixels)/2);
-        var maxWidth = width*halfWidthInPixels;
-        if (cell.attrs.bold) {
-          ctx.fillText(char, xoffset + x*halfWidthInPixels + 0.5, yoffset + y * fontHeight, maxWidth);
-        }
-        ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
-        ctx.fillText(char, xoffset + x*halfWidthInPixels, yoffset + y * fontHeight, maxWidth);
+      if (attrs.bold)
+        fg += 8;
+
+      if (!attrs.blink) {
+        renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
       }
 
       if (width == 2)
@@ -298,32 +213,126 @@ function renderScreen(ctx, halfWidthInPixels, doubleWidthInPixels, fontHeightMet
     ctx.restore();
   }
 
-  ctx.clearRect(0, 0, halfWidthInPixels * receiver.columns, fontHeight * receiver.rows);
+  ctx.clearRect(0, 0, halfWidth * receiver.columns, metrics.height * receiver.rows);
 
   for (var y = 0; y < receiver.rows; y++) {
     renderRow(y);
   }
 }
 
-function buildRowClasses(y) {
-  var str = 'row-' + receiver.buffer.getLine(y).getType();
-  if (y === receiver.scrollingRegionTop)
-    str += ' row-scroll-region-top';
-  if (y === receiver.scrollingRegionBottom)
-    str += ' row-scroll-region-bottom';
-  return str;
-}
+function renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics) {
+  var char = cell.character;
+  var width = wcwidth(char);
 
-function buildScreenHtml() {
-  var str = '';
+  if (char !== "" && char !== " ") {
+    ctx.fillStyle = COLORS[fg];
 
-  for (var y = 0; y < receiver.rows; y++) {
-    str += `<div id="row-${y}" class="${buildRowClasses(y)}" style="white-space: pre"><div>`;
-    str += buildRowHtml(y);
-    str += '</div></div>';
+    var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
+    var maxWidth = width*halfWidth;
+    if (cell.attrs.bold) {
+      ctx.fillText(char, xoffset + x*halfWidth + 0.5, y * metrics.height, maxWidth);
+    }
+    for (var i = 0; i < 2; i++)
+      ctx.fillText(char, xoffset + x*halfWidth, y * metrics.height, maxWidth);
   }
 
-  return str;
+  if (cell.attrs.underline) {
+    ctx.strokeStyle = COLORS[fg];
+    var underLineY = y * metrics.height + metrics.height - Math.floor(metrics.descent/2) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x * halfWidth, underLineY)
+    ctx.lineTo(x * halfWidth + width*halfWidth, underLineY);
+    ctx.stroke();
+  }
+}
+
+// t: [0, 1]
+function blinkAlpha(t) {
+  var a = 1 - t;
+  (a < 0.5) ? a * 2 : -2*a + 2
+}
+
+function cursorAlpha(t) {
+  //return Math.abs(1 - t*2);
+  return Math.abs(Math.cos(t * Math.PI));
+}
+
+function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWidth, metrics, clearAll) {
+  var defaultBackgroundColorIndex = (receiver.reverseScreenMode) ? 7 : 0;
+
+  function renderRow(y) {
+    ctx.save();
+    setRowClipAndTransform(y, metrics.height, halfWidth, receiver.buffer.getLine(y).getType());
+
+    for (var x  = 0; x < receiver.columns; x++) {
+      var cell = receiver.buffer.getCellAt(y, x);
+      var char = cell.character;
+      var attrs = cell.attrs;
+      var cursor = (y === receiver.cursor_y &&
+                    x === receiver.cursor_x &&
+                    receiver.isCursorVisible &&
+                    receiver.buffer.getScrollBackOffset() === 0);
+      var width = wcwidth(char);
+      var bg = attrs.backgroundColor ? attrs.backgroundColor : defaultBackgroundColorIndex;
+      var fg = attrs.textColor !== null ? attrs.textColor : receiver.getDefaultTextColor();
+
+      if (attrs.reverseVideo) {
+        var tmp = bg; bg = fg; fg = tmp;
+      }
+
+      if (cursor) {
+        ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
+        var t = ((frame - lastStaticRedraw) % 60)/59;
+        ctx.save();
+        ctx.globalAlpha = cursorAlpha(t);
+
+        // カーソルの描画。
+        if (window_focused) {
+          ctx.fillStyle = 'magenta';
+          ctx.fillRect(x * halfWidth, y * metrics.height,
+                       halfWidth * width, metrics.height);
+        } else {
+          ctx.strokeStyle = 'magenta';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x * halfWidth + 1, y * metrics.height + 1);
+          ctx.lineTo(x * halfWidth + (halfWidth * width) - 1, y * metrics.height + 1);
+          ctx.lineTo(x * halfWidth + (halfWidth * width) - 1, (y+1) * metrics.height - 1);
+          ctx.lineTo(x * halfWidth + 1, (y+1) * metrics.height - 1);
+          ctx.closePath();
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      if (attrs.bold)
+        fg += 8;
+
+      if (attrs.blink) {
+        ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
+        ctx.save();
+        ctx.globalAlpha = blinkAlpha((frame % 60)/59);;
+        //if (frame % 60 < 30)
+          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
+        ctx.restore();
+      } else if (cursor) {
+          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
+      }
+
+      if (width == 2)
+        x++;
+    }
+
+    ctx.restore();
+  }
+
+  if (clearAll)
+    ctx.clearRect(0, 0, halfWidth * receiver.columns, metrics.height * receiver.rows);
+
+  for (var y = 0; y < receiver.rows; y++) {
+    renderRow(y);
+  }
 }
 
 var windowNeedsResizing = false;
@@ -437,26 +446,38 @@ function setup()
     $('#indicator-offline').show();
   };
 
-  var fontSpec = '20px Courier New';
-  var canvas = document.getElementById('canvas');
-  var ctx = canvas.getContext('2d');
-  ctx.font = fontSpec;
+  var fontSpec = '20px monospace';
+  var ctx = document.getElementById('bottom-layer').getContext('2d');
+      ctx.font = fontSpec;
+  var ctx2 = document.getElementById('top-layer').getContext('2d');
   var letterWidthInPixels = ctx.measureText("m").width;
   var kanjiWidthInPixels = ctx.measureText("漢").width;
   var fontHeight = getTextHeight(ctx.font);
   var frame = 0;
+  var lastStaticRedraw = 0;
 
-  $('#canvas')[0].width = letterWidthInPixels * 80;
-  $('#canvas')[0].height = fontHeight.height * 24;
+  $('#screen-outer').width(letterWidthInPixels * 80);
+  $('#screen-outer').height(fontHeight.height * 24);
+  $('#bottom-layer')[0].width = letterWidthInPixels * 80;
+  $('#bottom-layer')[0].height = fontHeight.height * 24;
+  $('#top-layer')[0].width = letterWidthInPixels * 80;
+  $('#top-layer')[0].height = fontHeight.height * 24;
 
+  // サイズ変更でキャンバスの状態が失われるので、フォントを設定しなお
+  // す。
   ctx.font = fontSpec;
   ctx.textBaseline = "top";
+  ctx2.font = fontSpec;
+  ctx2.textBaseline = "top";
+
   var render = function() {
-    if (frame % 1 == 0) {
-      if (force_redraw) {
-        force_redraw = false;
-        renderScreen(ctx, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
-      }
+    if (force_redraw) {
+      renderScreenStatics(ctx, frame, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
+      lastStaticRedraw = frame;
+      renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, true);
+      force_redraw = false;
+    } else {
+      renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, false);
     }
     frame++;
     window.requestAnimationFrame(render)

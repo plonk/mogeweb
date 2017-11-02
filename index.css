@@ -4,14 +4,15 @@ body {
     width: 100%;
 }
 
-#screen_outer {
+#screen-outer {
     font-family: "MS Gothic", "TakaoGothic", "Noto Sans Mono CJK JP", monospace;
     font-size: 16px;
-    padding-bottom: 20px;
-    padding-top: 20px;
-/*    width: 680px; */
+    /* padding-bottom: 20px; */
+    /* padding-top: 20px; */
+    /* width: 680px; */
     margin-left: auto;
     margin-right: auto;
+    margin-top: 20px;
     text-align: center;
 }
 #screen {
