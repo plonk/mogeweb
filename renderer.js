@@ -312,7 +312,7 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
       if (attrs.blink) {
         ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
         ctx.save();
-        ctx.globalAlpha = blinkAlpha((frame % 60)/59);;
+        ctx.globalAlpha = blinkAlpha((frame % 60)/59);
         //if (frame % 60 < 30)
           renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
         ctx.restore();
