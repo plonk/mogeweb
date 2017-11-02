@@ -51,7 +51,7 @@ wss.on('connection', function connection(ws) {
   var job = setInterval(function () {
     if (pongWaiting) {
       console.log("client failed to pong");
-      ws.close();
+      term.socket.destroy();
       clearInterval(job);
     } else {
       try {
