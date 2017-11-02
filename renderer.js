@@ -151,7 +151,7 @@ function getTextHeight(font) {
   return result;
 }
 
-function setRowClipAndTransform(y, fontHeight, halfWidthInPixels, type) {
+function setRowClipAndTransform(ctx, y, fontHeight, halfWidthInPixels, type) {
   switch (type) {
   case 'double-width':
     ctx.scale(2,1);
@@ -181,7 +181,7 @@ function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
 
   function renderRow(y) {
     ctx.save();
-    setRowClipAndTransform(y, metrics.height, halfWidth, receiver.buffer.getLine(y).getType());
+    setRowClipAndTransform(ctx, y, metrics.height, halfWidth, receiver.buffer.getLine(y).getType());
 
     for (var x  = 0; x < receiver.columns; x++) {
       var cell = receiver.buffer.getCellAt(y, x);
