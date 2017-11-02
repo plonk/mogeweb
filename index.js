@@ -54,7 +54,11 @@ wss.on('connection', function connection(ws) {
       ws.close();
       clearInterval(job);
     } else {
-      ws.send(JSON.stringify({"type":"ping"}));
+      try {
+        ws.send(JSON.stringify({"type":"ping"}));
+      } catch (e) {
+        console.log(e);
+      }
       pongWaiting = true;
     }
   }, 10*1000);
