@@ -17,7 +17,7 @@ wss.on('connection', function connection(ws) {
 
   term.on('data', function(data) {
     try {
-      ws.send(data);
+      ws.send(JSON.stringify({"type":"data", "data":data}));
     } catch (e) {
       console.log(e);
     }
@@ -28,12 +28,34 @@ wss.on('connection', function connection(ws) {
     ws.close();
   });
 
-  ws.on('message', function incoming(message) {
-    term.write(message);
+  ws.on('message', function incoming(str) {
+    var message = JSON.parse(str);
+    switch (message["type"]) {
+    case "data":
+      term.write(message["data"]);
+      break;
+    case "pong":
+      pongWaiting = false;
+      break;
+    default:
+      console.log("unknown message type");
+    }
   });
 
   ws.on('close', function () {
     term.socket.destroy();
     console.log('close end');
   });
+
+  var pongWaiting = false;
+  var job = setInterval(function () {
+    if (pongWaiting) {
+      console.log("client failed to pong");
+      ws.close();
+      clearInterval(job);
+    } else {
+      ws.send(JSON.stringify({"type":"ping"}));
+      pongWaiting = true;
+    }
+  }, 10*1000);
 });

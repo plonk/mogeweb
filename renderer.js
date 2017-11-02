@@ -422,17 +422,24 @@ function setup()
   websocket.binaryType = 'arraybuffer';
   var term = {};
   term.write = function (str) {
-    websocket.send(str);
+    websocket.send(JSON.stringify({"type": "data", "data": str}));
   };
   transmitter = new Transmitter(term);
   var inBuffer = [];
   var utf8decoder;
   websocket.onmessage = function (event) {
-    var t0 = performance.now();
-    receiver.feed(event.data);
-    // console.log([performance.now() - t0, event.data.length]);
-    force_redraw = true;
-    // inBuffer.push(event.data);
+    var message = JSON.parse(event.data);
+    switch (message["type"]) {
+    case "data":
+      receiver.feed(message["data"]);
+      force_redraw = true;
+      break;
+    case "ping":
+      websocket.send(JSON.stringify({"type":"pong"}));
+      break;
+    default:
+      console.log("unknown message type");
+    }
   };
 
   websocket.onopen = function (event) {
