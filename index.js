@@ -1,14 +1,19 @@
+if (process.argv.length < 4) {
+  console.log("Usage: nodejs index.js PORT COMMAND [ARGS...]");
+  process.exit();
+}
+
+const port = +process.argv[2];
+const command = process.argv[3];
+const args = process.argv.slice(4);
 const WebSocket = require('ws');
-
-const wss = new WebSocket.Server({ port: 8888 });
-
+const wss = new WebSocket.Server({ port: port });
 var pty = require('pty.js');
 
-console.log('Server started on port 8888')
+console.log('Server started on port ' + port)
 
 wss.on('connection', function connection(ws) {
-  //var term = pty.spawn('ruby', ["welcome.rb"], {
-  var term = pty.spawn('bash', [], {
+  var term = pty.spawn(command, args, {
     name: 'xterm',
     cols: 80,
     rows: 24,
