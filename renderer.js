@@ -239,13 +239,49 @@ function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
   }
 }
 
+function isBlockElement(char) {
+  return !!blockElementMatrix(char);
+}
+
+function blockElementMatrix(char) {
+  if (char === "▖") return [0, 0, 1, 0];
+  if (char === "▗") return [0, 0, 0, 1];
+  if (char === "▘") return [1, 0, 0, 0];
+  if (char === "▙") return [1, 0, 1, 1];
+  if (char === "▚") return [1, 0, 0, 1];
+  if (char === "▛") return [1, 1, 1, 0];
+  if (char === "▜") return [1, 1, 0, 1];
+  if (char === "▝") return [0, 1, 0, 0];
+  if (char === "▞") return [0, 1, 1, 0];
+  if (char === "▟") return [0, 1, 1, 1];
+  if (char === "▌") return [1, 0, 1, 0];
+  if (char === "▐") return [0, 1, 0, 1];
+  if (char === "▄") return [0, 0, 1, 1];
+  if (char === "▀") return [1, 1, 0, 0];
+  if (char === "█") return [1, 1, 1, 1];
+}
+
 function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
   var char = cell.character;
   var width = wcwidth(char);
 
-  if (char !== "" && char !== " ") {
-    ctx.fillStyle = fgStyle;
+  ctx.fillStyle = fgStyle;
 
+  if (width === 1 && isBlockElement(char)) {
+    var [tl, tr, bl, br] = blockElementMatrix(char);
+    if (tl)
+      ctx.fillRect(x*halfWidth, y * metrics.height,
+                   halfWidth/2, metrics.height/2);
+    if (tr)
+      ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height,
+                   halfWidth/2, metrics.height/2);
+    if (bl)
+      ctx.fillRect(x*halfWidth, y * metrics.height + metrics.height/2,
+                   halfWidth/2, metrics.height/2);
+    if (br)
+      ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height + metrics.height/2,
+                   halfWidth/2, metrics.height/2);
+  } else if (char !== "" && char !== " ") {
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
     if (cell.attrs.bold) {
