@@ -476,9 +476,12 @@ function setup()
   var ctx = document.getElementById('bottom-layer').getContext('2d');
       ctx.font = fontSpec;
   var ctx2 = document.getElementById('top-layer').getContext('2d');
-  var letterWidthInPixels = ctx.measureText("m").width;
-  var kanjiWidthInPixels = ctx.measureText("漢").width;
+  var letterWidthInPixels = Math.round(ctx.measureText("m").width);
+  var kanjiWidthInPixels  = Math.round(ctx.measureText("漢").width);
   var fontHeight = getTextHeight(ctx.font);
+  fontHeight.height = Math.round(fontHeight.height);
+  //fontHeight.width = Math.round(fontHeight.width);
+  console.log([letterWidthInPixels, fontHeight]);
   var frame = 0;
   var lastStaticRedraw = 0;
 
