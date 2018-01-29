@@ -292,12 +292,7 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
                     receiver.isCursorVisible &&
                     receiver.buffer.getScrollBackOffset() === 0);
       var width = wcwidth(char);
-      var bg = attrs.backgroundColor ? attrs.backgroundColor : defaultBackgroundColorIndex;
-      var fg = attrs.textColor !== null ? attrs.textColor : receiver.getDefaultTextColor();
-
-      if (attrs.reverseVideo) {
-        var tmp = bg; bg = fg; fg = tmp;
-      }
+      var [fg, bg] = colorStyles(attrs, defaultBackgroundColorIndex);
 
       if (cursor) {
         ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
@@ -324,9 +319,6 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
 
         ctx.restore();
       }
-
-      if (attrs.bold)
-        fg += 8;
 
       if (attrs.blink) {
         ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
