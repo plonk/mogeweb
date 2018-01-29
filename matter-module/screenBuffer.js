@@ -8,11 +8,17 @@ function GraphicAttrs() {
   this.reset();
 }
 
-const GraphicAttrs_FIELDS = ['textColor', 'backgroundColor', 'bold', 'italic', 'blink', 'fastBlink', 'fraktur', 'crossedOut', 'underline', 'faint', 'conceal', 'reverseVideo']
+const GraphicAttrs_FIELDS = [
+  'textColor', 'textColorRGB', 'backgroundColor', 'backgroundColorRGB',
+  'bold', 'italic', 'blink', 'fastBlink', 'fraktur', 'crossedOut',
+  'underline', 'faint', 'conceal', 'reverseVideo'
+];
 
 GraphicAttrs.prototype.reset = function () {
   this.textColor = null;
+  this.textColorRGB = null;
   this.backgroundColor = null;
+  this.backgroundColorRGB = null;
   this.bold = false;
   this.italic = false;
   this.blink = false;

@@ -445,8 +445,19 @@ Receiver.prototype.selectGraphicRendition = function (args_str) {
       this.graphicAttrs.textColor = arg - 30;
       i++;
     } else if (arg === 38) { // extended set foreground
-      console.log(`unsupported SGR arg ${args[i]}`);
       i++;
+      if (args[i] === 5) {
+        i++;
+        this.graphicAttrs.textColor = args[i];
+        i++;
+      } else if (args[i] === 2) {
+        // TODO: サニティチェックしよう。
+        this.graphicAttrs.textColorRGB = [+args[i+1], +args[i+2], +args[i+3]];
+        i += 4;
+      } else {
+        console.log(`unsupported SGR arg ${args[i]}`);
+        return;
+      }
     } else if (arg === 39) {
       this.sgr_defaultTextColor();
       i++;
@@ -459,6 +470,10 @@ Receiver.prototype.selectGraphicRendition = function (args_str) {
         i++;
         this.graphicAttrs.backgroundColor = args[i];
         i++;
+      } else if (args[i] === 2) {
+        // TODO: サニティチェックしよう。
+        this.graphicAttrs.backgroundColorRGB = [+args[i+1], +args[i+2], +args[i+3]];
+        i += 4;
       } else {
         console.log("Unsupported SGR 48 spec.");
         return;

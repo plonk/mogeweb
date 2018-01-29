@@ -175,6 +175,33 @@ function setRowClipAndTransform(ctx, y, fontHeight, halfWidthInPixels, type) {
   }
 }
 
+function colorStyles(attrs, defaultBackgroundColorIndex) {
+  var bg;
+  var fg;
+
+  if (attrs.backgroundColorRGB) {
+    var rgb = attrs.backgroundColorRGB;
+    bg = "rgb("+rgb[0]+","+rgb[1]+","+rgb[2]+")";
+  } else {
+    bg = COLORS[attrs.backgroundColor !== null ? attrs.backgroundColor : defaultBackgroundColorIndex];
+  }
+  if (attrs.textColorRGB) {
+    var rgb = attrs.textColorRGB;
+    fg = "rgb("+rgb[0]+","+rgb[1]+","+rgb[2]+")";
+  } else {
+    var fgIndex = attrs.textColor !== null ? attrs.textColor : receiver.getDefaultTextColor();
+    if (attrs.bold)
+      fgIndex += 8;
+    fg = COLORS[fgIndex];
+  }
+
+  if (attrs.reverseVideo) {
+    return [bg, fg];
+  } else {
+    return [fg, bg];
+  }
+}
+
 function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
   var defaultBackgroundColorIndex = (receiver.reverseScreenMode) ? 7 : 0;
   var yoffset = Math.round((metrics.height - metrics.ascent)/2);
@@ -188,19 +215,11 @@ function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
       var char = cell.character;
       var attrs = cell.attrs;
       var width = wcwidth(char);
-      var bg = attrs.backgroundColor ? attrs.backgroundColor : defaultBackgroundColorIndex;
-      var fg = attrs.textColor !== null ? attrs.textColor : receiver.getDefaultTextColor();
+      var [fg, bg] = colorStyles(attrs, defaultBackgroundColorIndex);
 
-      if (attrs.reverseVideo) {
-        var tmp = bg; bg = fg; fg = tmp;
-      }
-
-      ctx.fillStyle = COLORS[bg];
+      ctx.fillStyle = bg;
       ctx.fillRect(x * halfWidth, y * metrics.height,
                    halfWidth * width, metrics.height);
-
-      if (attrs.bold)
-        fg += 8;
 
       if (!attrs.blink) {
         renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
@@ -220,12 +239,12 @@ function renderScreenStatics(ctx, frame, halfWidth, doubleWidth, metrics) {
   }
 }
 
-function renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics) {
+function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
   var char = cell.character;
   var width = wcwidth(char);
 
   if (char !== "" && char !== " ") {
-    ctx.fillStyle = COLORS[fg];
+    ctx.fillStyle = fgStyle;
 
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
@@ -237,7 +256,7 @@ function renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics) {
   }
 
   if (cell.attrs.underline) {
-    ctx.strokeStyle = COLORS[fg];
+    ctx.strokeStyle = fgStyle;
     var underLineY = y * metrics.height + metrics.height - Math.floor(metrics.descent/2) + 0.5;
     ctx.beginPath();
     ctx.moveTo(x * halfWidth, underLineY)
