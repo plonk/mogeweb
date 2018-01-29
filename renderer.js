@@ -249,10 +249,10 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
     if (cell.attrs.bold) {
-      ctx.fillText(char, xoffset + x*halfWidth + 0.5, y * metrics.height, maxWidth);
+      ctx.fillText(char, xoffset + x*halfWidth + 0.5, y * metrics.height + metrics.ascent, maxWidth);
     }
     for (var i = 0; i < 2; i++)
-      ctx.fillText(char, xoffset + x*halfWidth, y * metrics.height, maxWidth);
+      ctx.fillText(char, xoffset + x*halfWidth, y * metrics.height + metrics.ascent, maxWidth);
   }
 
   if (cell.attrs.underline) {
@@ -495,9 +495,9 @@ function setup()
   // サイズ変更でキャンバスの状態が失われるので、フォントを設定しなお
   // す。
   ctx.font = fontSpec;
-  ctx.textBaseline = "top";
+  //ctx.textBaseline = "top";
   ctx2.font = fontSpec;
-  ctx2.textBaseline = "top";
+  //ctx2.textBaseline = "top";
 
   var render = function() {
     if (force_redraw) {
