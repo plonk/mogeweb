@@ -552,10 +552,10 @@ window.onload = () => {
       var scrollAmount = receiver.rows;
       if (e.key === 'PageUp' && e.shiftKey) {
         receiver.scrollBack(scrollAmount);
-        //renderScreen();
+        force_redraw = true;
       } else if (e.key === 'PageDown' && e.shiftKey){
         receiver.scrollBack(-scrollAmount);
-        //renderScreen();
+        force_redraw = true;
       } else {
         if (transmitter) {
           if (stickyCtrl) {
