@@ -269,18 +269,20 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
 
   if (width === 1 && isBlockElement(char)) {
     var [tl, tr, bl, br] = blockElementMatrix(char);
+    var h1 = Math.ceil(metrics.height/2);
+    var h2 = Math.floor(metrics.height - h1);
     if (tl)
       ctx.fillRect(x*halfWidth, y * metrics.height,
-                   halfWidth/2, metrics.height/2);
+                   halfWidth/2, h1);
     if (tr)
       ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height,
-                   halfWidth/2, metrics.height/2);
+                   halfWidth/2, h1);
     if (bl)
-      ctx.fillRect(x*halfWidth, y * metrics.height + metrics.height/2,
-                   halfWidth/2, metrics.height/2);
+      ctx.fillRect(x*halfWidth, y * metrics.height +h1,
+                   halfWidth/2, h2);
     if (br)
-      ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height + metrics.height/2,
-                   halfWidth/2, metrics.height/2);
+      ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height +h1,
+                   halfWidth/2, h2);
   } else if (char !== "" && char !== " ") {
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
