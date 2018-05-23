@@ -52,6 +52,8 @@ wss.on('connection', function connection(ws) {
     console.log('close end');
   });
 
+  ws.on('error', console.error);
+
   var pongWaiting = false;
   var job = setInterval(function () {
     if (pongWaiting) {
