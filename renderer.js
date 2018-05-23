@@ -261,6 +261,29 @@ function blockElementMatrix(char) {
   if (char === "█") return [1, 1, 1, 1];
 }
 
+function isInPrivateArea(c) {
+  return (c.length === 2 &&
+          c.codePointAt(0) >= 0x100000 &&
+          c.codePointAt(0) <= 0x10FFFF);
+}
+
+function privateAreaCharacterSet(c) {
+  return String.fromCodePoint((c.codePointAt(0) >> 8) & 0xff);
+}
+
+function hasGlyph(charset, c) {
+  return true;
+}
+
+function startingCodePoint(designation, charset) {
+  var xx = designation.codePointAt(0);
+  var yy = charset.start;
+
+  return 0x100000 | (xx << 8) | yy;
+}
+
+var softCharacterSets = {};
+
 function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
   var char = cell.character;
   var width = wcwidth(char);
@@ -283,7 +306,20 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
     if (br)
       ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height +h1,
                    halfWidth/2, h2);
-  } else if (char !== "" && char !== " ") {
+  } else if (isInPrivateArea(char) &&
+             softCharacterSets[privateAreaCharacterSet(char)] &&
+             hasGlyph(softCharacterSets[privateAreaCharacterSet(char)], char)
+            ) {
+    var cs = softCharacterSets[privateAreaCharacterSet(char)];
+    var start = startingCodePoint(privateAreaCharacterSet(char), cs);
+    var offset = char.codePointAt(0) - start;
+    var fonty = Math.floor((offset * cs.fontWidth) / cs.canvas.width) * cs.fontHeight;
+    var fontx = (offset * cs.fontWidth) % cs.canvas.width;
+
+    var fontctx = cs.canvas.getContext('2d');
+    ctx.drawImage(cs.canvas, fontx, fonty, cs.fontWidth, cs.fontHeight,
+                         x * halfWidth, y * metrics.height, halfWidth, metrics.height);
+  } else if (char !== "" && char !== " ") { // その他の文字
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
     if (cell.attrs.bold) {
@@ -655,6 +691,17 @@ window.onload = () => {
   receiver = new Receiver(80, 24, {
     cursorKeyMode: function (mode) {
       transmitter.cursorKeyMode = mode;
+    },
+    loadCharacterSet: function(parameterBytes, dscs, font) {
+      var [pfn, pcn, pe, pcmw, pss, pt, pcmh] = parameterBytes.split(/;/);
+      var canvas = renderSixelGraphics(font);
+
+      softCharacterSets[dscs[1]] = { start: 0x20 + +pcn,
+                                     fontWidth: +pcmw,
+                                     fontHeight: +pcmh,
+                                     canvas: canvas,
+                                     nCharacters: (canvas.width / pcmw) * (canvas.height / pcmh) };
+      console.log([ "loadCharacterSet", softCharacterSets[dscs[1]] ]);
     },
   });
   setup();
