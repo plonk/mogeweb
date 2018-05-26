@@ -493,6 +493,10 @@ var websocket;
 var window_focused = true;
 var force_redraw = false;
 
+
+var soundSystem = new SoundSystem();
+var soundBuffer = [];
+
 function setup()
 {
   window.onbeforeunload = function (e) {
@@ -566,6 +570,13 @@ function setup()
   //ctx2.textBaseline = "top";
 
   var render = function() {
+    if (soundBuffer.length > 0) {
+      console.log("addnotes", soundBuffer);
+      if (soundSystem.addNotes(soundBuffer)) {
+        soundBuffer.length = 0;
+      }
+    }
+
     if (force_redraw) {
       renderScreenStatics(ctx, frame, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
       lastStaticRedraw = frame;
@@ -702,6 +713,9 @@ window.onload = () => {
                                      canvas: canvas,
                                      nCharacters: (canvas.width / pcmw) * (canvas.height / pcmh) };
       console.log([ "loadCharacterSet", softCharacterSets[dscs[1]] ]);
+    },
+    playSound: function (volume, duration, note) {
+      soundBuffer.push({volume: volume, duration: duration, note: note});
     },
   });
   setup();

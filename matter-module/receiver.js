@@ -15,6 +15,7 @@ function Receiver(columns, rows, callbacks) {
     cursorKeyMode(mode) {},
     beep() {},
     loadCharacterSet() {},
+    playSound() {},
   };
   for (var name of Object.keys(this.callbacks)) {
     if (callbacks[name]) {
@@ -305,7 +306,7 @@ Receiver.prototype.fc_controlSequenceIntroduced = function (c) {
     } else if (/^[\x40-\x7e]$/.exec(c)) {
       this.dispatchCommand(c, args);
       return this.fc_normal;
-    } else if (/^[=?>0-9;]$/.exec(c)) {
+    } else if (/^[\x30-\x3f\x20-\x2f]$/.exec(c)) { // parameter or intermediate
       args += c;
       return parsingControlSequence;
     } else {
@@ -1056,6 +1057,17 @@ Receiver.prototype.cmd_scrollDown = function (args_str) {
   this.scrollDown(this.scrollingRegionTop, this.scrollingRegionBottom, num);
 };
 
+Receiver.prototype.dispatchTilde = function (args_str) {
+  var intermediate = args_str[args_str.length - 1]
+  if (intermediate === ",") {
+    // play sound
+    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
+    this.callbacks.playSound(+p1, +p2, +p3);
+  } else {
+    console.log(`unknown intermediate character ${intermediate}. final = '~'`);
+  }
+};
+
 // After CSI.
 Receiver.prototype.dispatchCommand = function (letter, args_str) {
   if (args_str[0] === '?') {
@@ -1148,6 +1160,9 @@ Receiver.prototype.dispatchCommand = function (letter, args_str) {
     break;
   case 'T':
     this.cmd_scrollDown(args_str);
+    break;
+  case '~':
+    this.dispatchTilde(args_str);
     break;
   default:
     console.log(`unknown command letter ${letter} args ${args_str}`);
