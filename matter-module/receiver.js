@@ -16,6 +16,7 @@ function Receiver(columns, rows, callbacks) {
     beep() {},
     loadCharacterSet() {},
     playSound() {},
+    playSound2() {},
   };
   for (var name of Object.keys(this.callbacks)) {
     if (callbacks[name]) {
@@ -1063,6 +1064,10 @@ Receiver.prototype.dispatchTilde = function (args_str) {
     // play sound
     var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
     this.callbacks.playSound(+p1, +p2, +p3);
+  } else if (intermediate === "-") {
+    // YOTEPS
+    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
+    this.callbacks.playSound2(+p1, +p2, +p3);
   } else {
     console.log(`unknown intermediate character ${intermediate}. final = '~'`);
   }

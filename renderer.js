@@ -494,7 +494,7 @@ var window_focused = true;
 var force_redraw = false;
 
 
-var soundSystem = new SoundSystem();
+var soundSystem = new SoundSystem2();
 var soundBuffer = [];
 
 function setup()
@@ -715,6 +715,9 @@ window.onload = () => {
       console.log([ "loadCharacterSet", softCharacterSets[dscs[1]] ]);
     },
     playSound: function (volume, duration, note) {
+      soundBuffer.push({volume: volume / 7 * 100, duration: duration * (1/32) * 1000, note: note + 2});
+    },
+    playSound2: function (volume, duration, note) {
       soundBuffer.push({volume: volume, duration: duration, note: note});
     },
   });
