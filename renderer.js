@@ -261,13 +261,13 @@ function blockElementMatrix(char) {
   if (char === "█") return [1, 1, 1, 1];
 }
 
-function isInPrivateArea(c) {
+function isInPUA(c) {
   return (c.length === 2 &&
           c.codePointAt(0) >= 0x100000 &&
           c.codePointAt(0) <= 0x10FFFF);
 }
 
-function privateAreaCharacterSet(c) {
+function puaCharacterSet(c) {
   return String.fromCodePoint((c.codePointAt(0) >> 8) & 0xff);
 }
 
@@ -282,7 +282,51 @@ function startingCodePoint(designation, charset) {
   return 0x100000 | (xx << 8) | yy;
 }
 
+function isSoftCharacter(char)  {
+  if (isInPUA(char)) {
+    var cs = softCharacterSets[puaCharacterSet(char)];
+    if (cs) {
+      if (hasGlyph(cs, char)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 var softCharacterSets = {};
+
+function renderSoftCharacter(char, ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
+  var csName  = puaCharacterSet(char);
+  var cs      = softCharacterSets[csName];
+  var start   = startingCodePoint(csName, cs);
+  var offset  = char.codePointAt(0) - start;
+
+  if (cs.type === "pixmap") {
+    var fonty   = Math.floor((offset * cs.fontWidth) / cs.canvas.width) * cs.fontHeight;
+    var fontx   = (offset * cs.fontWidth) % cs.canvas.width;
+    var fontctx = cs.canvas.getContext('2d');
+    ctx.drawImage(cs.canvas, fontx, fonty, cs.fontWidth, cs.fontHeight,
+                  x * halfWidth, y * metrics.height, halfWidth, metrics.height);
+  } else if (cs.type === "bitmap") {
+    // offset は「いくつ目の文字か」。
+    var oy = Math.floor(offset / 16) * cs.fontHeight;
+    var ox = (offset % 16) * cs.fontWidth;
+    for (var yoff = 0; yoff < cs.fontHeight; yoff++) {
+      for (var xoff = 0; xoff < cs.fontWidth; xoff++) {
+        var bit = cs.array[(oy + yoff) * (cs.fontWidth*16) + (ox + xoff)];
+        var xscale = halfWidth / cs.fontWidth;
+        var yscale = metrics.height / cs.fontHeight;
+        if (bit) {
+          ctx.fillRect((x*halfWidth) + xoff*xscale, (y*metrics.height) + yoff*yscale,
+                       1*xscale, 1*yscale);
+        }
+      }
+    }
+  } else {
+    throw new Error("unknown font type: " + cs.type);
+  }
+}
 
 function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
   var char = cell.character;
@@ -306,19 +350,8 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
     if (br)
       ctx.fillRect(x*halfWidth + halfWidth/2, y * metrics.height +h1,
                    halfWidth/2, h2);
-  } else if (isInPrivateArea(char) &&
-             softCharacterSets[privateAreaCharacterSet(char)] &&
-             hasGlyph(softCharacterSets[privateAreaCharacterSet(char)], char)
-            ) {
-    var cs = softCharacterSets[privateAreaCharacterSet(char)];
-    var start = startingCodePoint(privateAreaCharacterSet(char), cs);
-    var offset = char.codePointAt(0) - start;
-    var fonty = Math.floor((offset * cs.fontWidth) / cs.canvas.width) * cs.fontHeight;
-    var fontx = (offset * cs.fontWidth) % cs.canvas.width;
-
-    var fontctx = cs.canvas.getContext('2d');
-    ctx.drawImage(cs.canvas, fontx, fonty, cs.fontWidth, cs.fontHeight,
-                         x * halfWidth, y * metrics.height, halfWidth, metrics.height);
+  } else if (isSoftCharacter(char)) {
+    renderSoftCharacter(char, ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics);
   } else if (char !== "" && char !== " ") { // その他の文字
     var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
     var maxWidth = width*halfWidth;
@@ -591,6 +624,33 @@ function setup()
   window.requestAnimationFrame(render);
 }
 
+function renderBitmapFont(cs, font) {
+  // PATTERN sixelgraphics.js
+
+  var glyphCount = 0;
+  for (var glyph of font.split(';')) {
+    var lineCount = 0;
+    for (var line of glyph.split('/')) {
+      var chCount = 0;
+      for (var ch of line) {
+        for (var i = 0; i < 6; i++) {
+          var y = Math.floor(glyphCount / 16) * cs.fontHeight + lineCount * 6 + i;
+          var x = (glyphCount % 16) * cs.fontWidth + chCount;
+          var index = y * (cs.fontWidth*16) + x;
+          if (index < cs.array.length) {
+            console.log(index, PATTERN[ch][i]);
+            cs.array[index] = PATTERN[ch][i];
+          }
+        }
+        chCount++;
+      }
+      lineCount++;
+    }
+    glyphCount++;
+  }
+  console.log(font);
+}
+
 window.onload = () => {
   var ctrlJustPressed = false;
   var stickyCtrl = false;
@@ -705,14 +765,30 @@ window.onload = () => {
     },
     loadCharacterSet: function(parameterBytes, dscs, font) {
       var [pfn, pcn, pe, pcmw, pss, pt, pcmh] = parameterBytes.split(/;/);
-      var canvas = renderSixelGraphics(font);
+      var csName = dscs[1];
+      var fontWidth = +pcmw;
+      var fontHeight = +pcmh;
 
-      softCharacterSets[dscs[1]] = { start: 0x20 + +pcn,
-                                     fontWidth: +pcmw,
-                                     fontHeight: +pcmh,
-                                     canvas: canvas,
-                                     nCharacters: (canvas.width / pcmw) * (canvas.height / pcmh) };
-      console.log([ "loadCharacterSet", softCharacterSets[dscs[1]] ]);
+      if (pt === "3") {
+        var canvas = renderSixelGraphics(font);
+        softCharacterSets[csName] = { type: "pixmap",
+                                      start: 0x20 + +pcn,
+                                      fontWidth: fontWidth,
+                                      fontHeight: fontHeight,
+                                      canvas: canvas,
+                                      nCharacters: (canvas.width / pcmw) * (canvas.height / pcmh) };
+        console.log([ "loadCharacterSet", softCharacterSets[dscs[1]] ]);
+      } else {
+        if (softCharacterSets[csName] === undefined) {
+          softCharacterSets[csName] = { type: "bitmap",
+                                        start: 0x20 + +pcn,
+                                        fontWidth: fontWidth,
+                                        fontHeight: fontHeight,
+                                        array: new Uint8Array(fontWidth * fontHeight * 96),
+                                        nCharacters: 96 };
+        }
+        renderBitmapFont(softCharacterSets[csName], font);
+      }
     },
     playSound: function (volume, duration, note) {
       soundBuffer.push({volume: volume / 7 * 100, duration: duration * (1/32) * 1000, note: note + 2});
