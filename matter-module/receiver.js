@@ -52,8 +52,6 @@ Receiver.prototype.fullReset = function () {
   this.scrollingRegionBottom = this.rows - 1;
   this.originModeRelative = false;
   this.autoWrap = true;
-  this.lastWrittenColumn = -1;
-  this.lastWrittenRow = -1;
   this.resetTabStops();
   this.G0 = this.cs_noConversion;
   this.G1 = this.cs_noConversion;
@@ -61,7 +59,6 @@ Receiver.prototype.fullReset = function () {
   this.G3 = this.cs_noConversion;
   this.characterSet = 0;
   this.reverseScreenMode = false;
-  this.lastOperationWasPrint = false;
   this.printed = false;
   this.cursorBlink = true;
   this.smoothScrollMode = false;
@@ -125,7 +122,7 @@ Receiver.prototype.cursorOffset = function () {
 };
 
 Receiver.prototype.advanceCursor = function () {
-  if (this.cursor_x === this.columns - 1) {
+  if (this.cursor_x === this.columns) {
     if (this.cursor_y === this.scrollingRegionBottom) {
       this.lineFeed();
     } else {
@@ -140,12 +137,7 @@ Receiver.prototype.advanceCursor = function () {
 // FIXME: マルチ幅文字
 Receiver.prototype.backCursor = function () {
   if (this.cursor_x === 0) {
-    if (this.cursor_y === 0) {
-      ;
-    } else {
-      this.cursor_y -= 1;
-      this.cursor_x = this.columns - 1;
-    }
+    ;
   } else {
     this.cursor_x -= 1;
   }
@@ -224,14 +216,7 @@ Receiver.prototype.printCharacter = function (c) {
   var cell = this.buffer.getCellAtOffset(this.cursorOffset());
   cell.attrs = this.graphicAttrs.clone();
   cell.character = this.applyCurrentCharacterSet(c);
-  this.lastWrittenRow = this.cursor_y;
-  this.lastWrittenColumn = this.cursor_x;
   this.printed = true;
-};
-
-Receiver.prototype.isLastWrittenPosition = function () {
-  return this.lastWrittenRow === this.cursor_y &&
-    this.lastWrittenColumn === this.cursor_x;
 };
 
 Receiver.prototype.addCharacter = function (c) {
@@ -241,11 +226,9 @@ Receiver.prototype.addCharacter = function (c) {
     if (this.insertMode) {
       this.insertBlankCharacters('1');
     }
-    if (this.cursor_x === this.columns - 1) {
-      if (this.autoWrap &&
-          this.lastOperationWasPrint &&
-          this.isLastWrittenPosition()) { // 連続2回目の最終カラムへの印字。
-        this.advanceCursor(); // 次の行へラップ。
+    if (this.cursor_x === this.columns) {
+      if (this.autoWrap) {
+        this.advanceCursor();
         this.printCharacter(c);
         this.advanceCursor();
       } else {
@@ -625,6 +608,8 @@ Receiver.prototype.tabStopBackward = function (args) {
   this.cursor_x = Math.max(0, (Math.floor(this.cursor_x / 8) - num) * 8);
 };
 
+// 現在の行のカーソル位置に空白文字を指定の個数だけ挿入する。カーソル
+// より右の内容は右にずらされる。
 Receiver.prototype.insertBlankCharacters = function (args_str) {
   var num = +args_str;
 
@@ -1058,22 +1043,6 @@ Receiver.prototype.cmd_scrollDown = function (args_str) {
   this.scrollDown(this.scrollingRegionTop, this.scrollingRegionBottom, num);
 };
 
-Receiver.prototype.dispatchTilde = function (args_str) {
-  var intermediate = args_str[args_str.length - 1]
-  if (intermediate === ",") {
-    // play sound
-    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
-    this.callbacks.playSound(+p1, +p2, +p3);
-  } else if (intermediate === "-") {
-    // YOTEPS
-    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
-    this.callbacks.playSound2(+p1, +p2, +p3);
-  } else {
-    console.log(`unknown intermediate character ${intermediate}. final = '~'`);
-  }
-};
-
-// After CSI.
 Receiver.prototype.dispatchCommand = function (letter, args_str) {
   if (args_str[0] === '?') {
     this.dispatchCommandQuestion(letter, args_str.slice(1));
@@ -1502,7 +1471,6 @@ function isTrue(value) {
 
 Receiver.prototype.feedCharacter = function (character) {
   this.interpretFn = this.interpretFn(character);
-  this.lastOperationWasPrint = this.printed;
   this.printed = false;
 };
 
