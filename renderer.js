@@ -394,11 +394,26 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
       var cell = receiver.buffer.getCellAt(y, x);
       var char = cell.character;
       var attrs = cell.attrs;
-      var cursor = (y === receiver.cursor_y &&
-                    x === receiver.cursor_x &&
-                    receiver.isCursorVisible &&
-                    receiver.buffer.getScrollBackOffset() === 0);
       var width = wcwidth(char);
+      var cursor;
+
+      if (receiver.isCursorVisible && receiver.buffer.getScrollBackOffset() === 0) {
+          if (y === receiver.cursor_y && receiver.cursor_x === receiver.columns) {
+            if (width === 1 && x === receiver.columns - 1) {
+              cursor = true;
+            } else if (width == 2 && x === receiver.columns - 2) {
+              cursor = true;
+            } else {
+              cursor = false;
+            }
+          } else if (y === receiver.cursor_y && x === receiver.cursor_x) {
+            cursor = true;
+          } else {
+            cursor = false;
+          }
+      } else {
+        cursor = false;
+      }
       var [fg, bg] = colorStyles(attrs, defaultBackgroundColorIndex);
 
       if (cursor) {
