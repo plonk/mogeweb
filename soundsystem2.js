@@ -14,7 +14,7 @@ class SoundSystem2 {
     this.gainNode.gain.value = 0;
     this.oscillator.start();
 
-    this.globalVolume = 0.1;
+    this.globalVolume = 0.25;
   }
 
   addNotes(queue) {
