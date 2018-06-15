@@ -1043,7 +1043,23 @@ Receiver.prototype.cmd_scrollDown = function (args_str) {
   this.scrollDown(this.scrollingRegionTop, this.scrollingRegionBottom, num);
 };
 
-Receiver.prototype.dispatchCommand = function (letter, args_str) {
+Receiver.prototype.dispatchTilde = function (args_str) {
+  var intermediate = args_str[args_str.length - 1]
+  if (intermediate === ",") {
+    // play sound
+    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
+    this.callbacks.playSound(+p1, +p2, +p3);
+  } else if (intermediate === "-") {
+    // YOTEPS
+    var [p1, p2, p3] = args_str.slice(0, args_str.length-1).split(/;/);
+    this.callbacks.playSound2(+p1, +p2, +p3);
+  } else {
+    console.log(`unknown intermediate character ${intermediate}. final = '~'`);
+  }
+};
+
+// After CSI.
+ Receiver.prototype.dispatchCommand = function (letter, args_str) {
   if (args_str[0] === '?') {
     this.dispatchCommandQuestion(letter, args_str.slice(1));
     return this.fc_normal;
