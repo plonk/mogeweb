@@ -749,8 +749,9 @@ window.onload = () => {
     showInputModal();
   });
 
-  $('#connect-button').on('click', function () {
+  $('#connect-button').on('click', function (e) {
     setup();
+    $(this).blur();
   });
 
   $('#inputModal').on('shown.bs.modal', function () {
