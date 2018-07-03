@@ -105,6 +105,7 @@ Transmitter.prototype.toCharacter = function (key, ctrlKey, altKey, shiftKey) {
 
   if (key == 'Backspace' && ctrlKey && altKey) { return '\x1b\x08'; }
   if (key == 'Backspace' && ctrlKey) { return '\x08'; }
+  if (key == 'Tab' && shiftKey) { return '\x1b[Z'; }
   if (CONTROL_CHARACTER_KEYS[key]) {
     return CONTROL_CHARACTER_KEYS[key];
   }
