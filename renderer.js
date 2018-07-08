@@ -375,7 +375,7 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
 // t: [0, 1]
 function blinkAlpha(t) {
   var a = 1 - t;
-  (a < 0.5) ? a * 2 : -2*a + 2
+  return (a < 0.5) ? a * 2 : -2*a + 2
 }
 
 function cursorAlpha(t) {
