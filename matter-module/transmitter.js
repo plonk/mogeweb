@@ -28,8 +28,10 @@ var SEQUENCE_FUNCTION_KEYS = {
 
   'Insert'     : '\x1b[2~',
   'Delete'     : '\x1b[3~',
-  'Home'       : '\x1b[1~',
-  'End'        : '\x1b[4~',
+  // 'Home'       : '\x1b[1~',
+  // 'End'        : '\x1b[4~',
+  'Home'       : '\x1b[H',
+  'End'        : '\x1b[F',
   'PageUp'     : '\x1b[5~',
   'PageDown'   : '\x1b[6~',
 };
@@ -46,6 +48,8 @@ var APPLICATION_FUNCTION_KEY_TABLE = {
   'ArrowDown'  : '\x1bOB',
   'ArrowRight' : '\x1bOC',
   'ArrowLeft'  : '\x1bOD',
+  'Home'       : '\x1bOH',
+  'End'        : '\x1bOF',
 };
 
 var MODIFIER_TABLE = {
