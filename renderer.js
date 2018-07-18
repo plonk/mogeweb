@@ -323,6 +323,13 @@ function renderSoftCharacter(char, ctx, x, y, cell, fgStyle, halfWidth, doubleWi
     var fonty   = Math.floor((offset * cs.fontWidth) / cs.canvas.width) * cs.fontHeight;
     var fontx   = (offset * cs.fontWidth) % cs.canvas.width;
     var fontctx = cs.canvas.getContext('2d');
+    if ((halfWidth % cs.fontWidth) == 0 && (metrics.height % cs.fontHeight) == 0) {
+      ctx.mozImageSmoothingEnabled = false;
+      ctx.webkitImageSmoothingEnabled = false;
+    } else {
+      ctx.mozImageSmoothingEnabled = true;
+      ctx.webkitImageSmoothingEnabled = true;
+    }
     ctx.drawImage(cs.canvas, fontx, fonty, cs.fontWidth, cs.fontHeight,
                   x * halfWidth, y * metrics.height, halfWidth, metrics.height);
   } else if (cs.type === "bitmap") {
@@ -343,6 +350,13 @@ function renderSoftCharacter(char, ctx, x, y, cell, fgStyle, halfWidth, doubleWi
   } else {
     throw new Error("unknown font type: " + cs.type);
   }
+}
+
+function inBMP(char) {
+  return char.codePointAt(0) <= 0xffff;
+  // var code = char.charCodeAt(0);
+  // // not in the surrogate pair range
+  // return !(code >= 0xDC00 && code <= 0xDFFF);
 }
 
 function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics) {
@@ -369,14 +383,34 @@ function renderCharacter(ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metri
                    halfWidth/2, h2);
   } else if (isSoftCharacter(char)) {
     renderSoftCharacter(char, ctx, x, y, cell, fgStyle, halfWidth, doubleWidth, metrics);
-  } else if (char !== "" && char !== " ") { // その他の文字
-    var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
-    var maxWidth = width*halfWidth;
-    if (cell.attrs.bold) {
-      ctx.fillText(char, xoffset + x*halfWidth + 0.5, y * metrics.height + metrics.ascent, maxWidth);
+  } else if (char !== "" && char !== " ") {
+    if (bitmapFont && inBMP(char)) {
+      // offset は「いくつ目の文字か」。
+      var offset = char.codePointAt(0);
+      var oy = Math.floor(offset / 256) * 16;
+      var ox = (offset % 256) * 16;
+      var glyphWidth = width * 8;
+      for (var yoff = 0; yoff < 16; yoff++) {
+        for (var xoff = 0; xoff < glyphWidth; xoff++) {
+          var row = fontBasicMultilingualPlane[(oy+yoff) * (4096/8) + Math.floor((ox+xoff) / 8)];
+          var bit = (row >> (7 - ((ox+xoff)%8))) & 0x01;
+          var xscale = halfWidth / 8;
+          var yscale = metrics.height / 16;
+          if (bit) {
+            ctx.fillRect((x*halfWidth) + xoff*xscale, (y*metrics.height) + yoff*yscale,
+                         1*xscale, 1*yscale);
+          }
+        }
+      }
+    } else {
+      var xoffset = (width == 1) ? 0 : Math.floor(Math.max(0,halfWidth*2 - doubleWidth)/2);
+      var maxWidth = width*halfWidth;
+      if (cell.attrs.bold) {
+        ctx.fillText(char, xoffset + x*halfWidth + 0.5, y * metrics.height + metrics.ascent, maxWidth);
+      }
+      for (var i = 0; i < 2; i++)
+        ctx.fillText(char, xoffset + x*halfWidth, y * metrics.height + metrics.ascent, maxWidth);
     }
-    for (var i = 0; i < 2; i++)
-      ctx.fillText(char, xoffset + x*halfWidth, y * metrics.height + metrics.ascent, maxWidth);
   }
 
   if (cell.attrs.underline) {
@@ -558,9 +592,12 @@ var websocket;
 var window_focused = true;
 var force_redraw = false;
 
+var bitmapFont = false;
 
 var soundSystem = new SoundSystem2();
 var soundBuffer = [];
+
+var changeFont;
 
 function setup()
 {
@@ -607,32 +644,50 @@ function setup()
     $('#indicator-offline').show();
   };
 
-  var fontSpec = '20px monospace';
-  var ctx = document.getElementById('bottom-layer').getContext('2d');
-      ctx.font = fontSpec;
-  var ctx2 = document.getElementById('top-layer').getContext('2d');
-  var letterWidthInPixels = Math.round(ctx.measureText("m").width);
-  var kanjiWidthInPixels  = Math.round(ctx.measureText("漢").width);
-  var fontHeight = getTextHeight(ctx.font);
-  fontHeight.height = Math.round(fontHeight.height);
-  //fontHeight.width = Math.round(fontHeight.width);
-  console.log([letterWidthInPixels, fontHeight]);
+  var ctx;
+  var ctx2;
+  var letterWidthInPixels;
+  var kanjiWidthInPixels;
+  var fontHeight;
   var frame = 0;
   var lastStaticRedraw = 0;
 
-  $('#screen-outer').width(letterWidthInPixels * 80);
-  $('#screen-outer').height(fontHeight.height * 24);
-  $('#bottom-layer')[0].width = letterWidthInPixels * 80;
-  $('#bottom-layer')[0].height = fontHeight.height * 24;
-  $('#top-layer')[0].width = letterWidthInPixels * 80;
-  $('#top-layer')[0].height = fontHeight.height * 24;
+  ctx = document.getElementById('bottom-layer').getContext('2d');
+  ctx2 = document.getElementById('top-layer').getContext('2d');
 
-  // サイズ変更でキャンバスの状態が失われるので、フォントを設定しなお
-  // す。
-  ctx.font = fontSpec;
-  //ctx.textBaseline = "top";
-  ctx2.font = fontSpec;
-  //ctx2.textBaseline = "top";
+  changeFont = function(pixelSize, isBitmap) {
+    bitmapFont = isBitmap;
+    var fontSpec = pixelSize + "px monospace";
+    ctx.font = fontSpec;
+
+    if (isBitmap) {
+      letterWidthInPixels = pixelSize/2;
+      kanjiWidthInPixels = pixelSize;
+      fontHeight = getTextHeight(ctx.font);
+      fontHeight.height = pixelSize;
+    } else {
+      letterWidthInPixels = Math.round(ctx.measureText("m").width);
+      kanjiWidthInPixels  = Math.round(ctx.measureText("漢").width);
+      fontHeight = getTextHeight(ctx.font);
+      fontHeight.height = Math.round(fontHeight.height);
+      //fontHeight.width = Math.round(fontHeight.width);
+    }
+    console.log([letterWidthInPixels, fontHeight]);
+
+    $('#screen-outer').width(letterWidthInPixels * 80);
+    $('#screen-outer').height(fontHeight.height * 24);
+    $('#bottom-layer')[0].width = letterWidthInPixels * 80;
+    $('#bottom-layer')[0].height = fontHeight.height * 24;
+    $('#top-layer')[0].width = letterWidthInPixels * 80;
+    $('#top-layer')[0].height = fontHeight.height * 24;
+
+    // サイズ変更でキャンバスの状態が失われるので、フォントを設定しなお
+    // す。
+    ctx.font = fontSpec;
+    ctx2.font = fontSpec;
+
+    force_redraw = true;
+  }
 
   var render = function() {
     if (soundBuffer.length > 0) {
@@ -670,7 +725,10 @@ function renderBitmapFont(cs, font) {
           var x = (glyphCount % 16) * cs.fontWidth + chCount;
           var index = y * (cs.fontWidth*16) + x;
           if (index < cs.array.length) {
-            console.log(index, PATTERN[ch][i]);
+            if (PATTERN[ch] === undefined) {
+              throw new Error("invalid sixel character " + ch);
+            }
+            //console.log(index, PATTERN[ch][i]);
             cs.array[index] = PATTERN[ch][i];
           }
         }
@@ -680,7 +738,7 @@ function renderBitmapFont(cs, font) {
     }
     glyphCount++;
   }
-  console.log(font);
+  //console.log(font);
 }
 
 window.onload = () => {
@@ -780,6 +838,10 @@ window.onload = () => {
     modalShown = false;
   });
 
+  $('#about-button').on('click', function () {
+    showAboutModal();
+  });
+
   $('#aboutModal').on('shown.bs.modal', function () {
     modalShown = true;
   });
@@ -789,6 +851,25 @@ window.onload = () => {
   });
 
   $('#version').html('0.0.2');
+
+  function selectedValue(selectElement) {
+    console.log(selectElement);
+    if (selectElement.selectedOptions.length > 0) {
+      return selectElement.selectedOptions[0].value;
+    } else {
+      return null;
+    }
+  }
+
+  $('#font-size').on('change', function() {
+    changeFont(selectedValue($('#font-size')[0]), selectedValue($('#font-type')[0])==="system");
+    $(this).blur();
+  });
+
+  $('#font-type').on('change', function() {
+    changeFont(selectedValue($('#font-size')[0]), selectedValue($('#font-type')[0])==="system");
+    $(this).blur();
+  });
 
   // ------------------------------------------------------------
 
@@ -821,6 +902,7 @@ window.onload = () => {
                                         nCharacters: 96 };
         }
         renderBitmapFont(softCharacterSets[csName], font);
+        console.log([ "loadCharacterSet (bitmap)", softCharacterSets[dscs[1]] ]);
       }
     },
     // DECPS
@@ -841,6 +923,8 @@ window.onload = () => {
     },
   });
   setup();
+
+  changeFont(selectedValue($('#font-size')[0]), selectedValue($('#font-type')[0])==="system");
 
   // ------------------------------------------------------------
 

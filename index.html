@@ -20,10 +20,32 @@
     <script src="config.js"></script>
     <script src="sixelgraphics.js"></script>
     <script src="soundsystem2.js"></script>
+    <script src="unifont.js"></script>
     <script src="renderer.js"></script>
     <link rel="stylesheet" href="index.css">
   </head>
   <body style="background-color: #111">
+
+    <div style="margin-top: 10px; margin-left: 15px; color: #eee; margin-right: 10px">
+      Font:
+      <select id="font-type" style="background-color: #333; color: #eee">
+        <option value=system selected>System</option>
+        <option value=browser>Browser</option>
+      </select>
+
+      <select id="font-size" style="background-color: #333; color: #eee">
+        <option value=10>10</option>
+        <option value=12>12</option>
+        <option value=14>14</option>
+        <option value=16 selected>16</option>
+        <option value=20>20</option>
+        <option value=24>24</option>
+        <option value=32>32</option>
+      </select>
+      px
+
+    </div>
+
     <div id="screen-outer" style="position: relative">
       <canvas id="bottom-layer" style="position: absolute; left: 0; top: 0; z-index: 0" width=640 height=384></canvas>
       <canvas id="top-layer"    style="position: absolute; left: 0; top: 0; z-index: 1" width=640 height=384></canvas>
