@@ -103,6 +103,7 @@ function modifyFunctionKey (seq, ctrlKey, altKey, shiftKey) {
 Transmitter.prototype.toCharacter = function (key, ctrlKey, altKey, shiftKey) {
   console.log(this.cursorKeyMode);
   if (this.cursorKeyMode === 'application' &&
+      !(ctrlKey || altKey || shiftKey) && // unmodified
       APPLICATION_FUNCTION_KEY_TABLE[key]) {
       return APPLICATION_FUNCTION_KEY_TABLE[key];
   }
