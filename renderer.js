@@ -433,6 +433,17 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
       }
       var [fg, bg] = colorStyles(attrs, defaultBackgroundColorIndex);
 
+      if (attrs.blink) {
+        ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
+        ctx.save();
+        ctx.globalAlpha = blinkAlpha((frame % 60)/59);
+        //if (frame % 60 < 30)
+          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
+        ctx.restore();
+      } else if (cursor) {
+          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
+      }
+
       if (cursor) {
         ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
         var t = ((frame - lastStaticRedraw) % 60)/59;
@@ -457,17 +468,6 @@ function renderScreenDynamics(ctx, frame, lastStaticRedraw, halfWidth, doubleWid
         }
 
         ctx.restore();
-      }
-
-      if (attrs.blink) {
-        ctx.clearRect(x*halfWidth, y*metrics.height, halfWidth*width, metrics.height);
-        ctx.save();
-        ctx.globalAlpha = blinkAlpha((frame % 60)/59);
-        //if (frame % 60 < 30)
-          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
-        ctx.restore();
-      } else if (cursor) {
-          renderCharacter(ctx, x, y, cell, fg, halfWidth, doubleWidth, metrics);
       }
 
       if (width == 2)
