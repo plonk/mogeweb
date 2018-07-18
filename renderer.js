@@ -823,11 +823,21 @@ window.onload = () => {
         renderBitmapFont(softCharacterSets[csName], font);
       }
     },
+    // DECPS
     playSound: function (volume, duration, note) {
       soundBuffer.push({volume: volume / 7 * 100, duration: duration * (1/32) * 1000, note: note + 2});
     },
+    // YOTEPS
     playSound2: function (volume, duration, note) {
       soundBuffer.push({volume: volume, duration: duration, note: note});
+    },
+    beep: function() {
+      // VMWare などの仮想環境でサウンドデバイスが音を出し始めるまで数
+      // 十msかかるので、無音を挟む。
+      soundBuffer.push({volume: 0, duration: 75, note: 0});
+
+      // B6 10ms
+      soundBuffer.push({volume: 100, duration: 10, note: 26});
     },
   });
   setup();
