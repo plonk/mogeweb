@@ -16,15 +16,16 @@
 */
 
 if (process.argv.length < 4) {
-  console.log("Usage: nodejs index.js PORT COMMAND [ARGS...]");
+  console.log("Usage: nodejs index.js HOST PORT COMMAND [ARGS...]");
   process.exit();
 }
 
-const port = +process.argv[2];
-const command = process.argv[3];
-const args = process.argv.slice(4);
+const host = process.argv[2];
+const port = +process.argv[3];
+const command = process.argv[4];
+const args = process.argv.slice(5);
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: port });
+const wss = new WebSocket.Server({ host, port });
 var pty = require('pty.js');
 
 console.log('Server started on port ' + port)
