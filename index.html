@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>もげＲＰＧ</title>
+    <title>mogeweb</title>
     <!-- <script>
     window.$ = window.jQuery = require('./bower_components/jquery/dist/jquery.min.js');
     </script> -->
@@ -10,14 +10,6 @@
     <script>
       window.jQuery = $;
     </script>
-    <script src="bower_components/emojione/lib/js/emojione.min.js"></script>
-    <link rel="stylesheet" href="bower_components/emojione/assets/css/emojione.min.css"/>
-    <script type="text/javascript">
-     emojione.imageType = 'svg';
-     emojione.imagePathPNG = 'bower_components/emojione/assets/png/';
-     emojione.imagePathSVG = 'bower_components/emojione/assets/svg/';
-    </script>
-
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
     <!-- <link rel="stylesheet" href="https://bootswatch.com/4/slate/bootstrap.min.css"> -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
@@ -49,11 +41,15 @@
       <span style="margin-right: 0.5em; ">CTRL LOCK</span>
       <button id="connect-button" class="btn btn-default long-button">CONNECT</button>
       <button id="input-button" class="btn btn-default long-button">INPUT</button>
+      <button id="about-button" class="btn btn-default long-button">ABOUT</button>
       <br>
-    </div>
 
-    <div style="margin-top: 10px; margin-left: 15px; margin-right: 10px">
-      もげRPG <a href="https://github.com/fusuya/mogeRPG">github.com/fusuya/mogeRPG</a>
+      Sent:
+      <span id="sent-characters">n/a</span>
+      chars.
+      Received:
+      <span id="received-characters">n/a</span>
+      chars.
     </div>
 
     <!-- ******************************************************************** -->
@@ -84,14 +80,14 @@
             <h4 class="modal-title">バージョン情報</h4>
           </div>
           <div class="modal-body">
-            matter <span id="version"></span> &copy; Yoteichi<br>
+            mogeweb <span id="version"></span> &copy; Yoteichi<br>
             <h4>使用ライブラリ</h4>
             CBuffer <span id="cbuffer_version"></span>
             bootstrap <span id="bootstrap_version"></span>
             eastasianwidth <span id="eastasianwidth_version"></span>
-            emojione <span id="emojione_version"></span>
             jquery <span id="jquery_version"></span>
             pty <span id="pty_version"></span><br>
+            GNU unifont
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" data-dismiss="modal" style="min-width: 100px">閉じる</button>
