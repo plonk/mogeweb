@@ -9,7 +9,7 @@ button.long-button {
 }
 
 body {
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
     /* overflow-y: hidden; */
     width: 100%;
 }
