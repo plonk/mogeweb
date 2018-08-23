@@ -260,7 +260,7 @@ Receiver.prototype.addCharacter = function (c) {
     if (this.insertMode) {
       this.insertBlankCharacters('2');
     }
-    if (this.cursor_x === this.columns - 1) {
+    if (this.cursor_x >= this.columns - 1) {
       if (this.autoWrap) {
         this.advanceCursor();
       }
