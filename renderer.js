@@ -826,6 +826,7 @@ window.onload = () => {
 
   $('#connect-button').on('click', function (e) {
     setup();
+    receiver.fullReset();
     $(this).blur();
   });
 
