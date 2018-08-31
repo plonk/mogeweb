@@ -13,6 +13,7 @@ $(function(){
     if (pressed == 1) { transmitter.paste("\r"); }
     //if (pressed == 2) { addlog("Dash "); }
     if (pressed == 3) { transmitter.paste("s"); }
+    if (pressed == 4) { transmitter.paste("t"); }
     if (pressed == 12) {
       if (diagonal) {
         if (buttons[13]) {
