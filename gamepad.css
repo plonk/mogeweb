@@ -1,0 +1,11 @@
+.gamepad-button {
+    background-color: #555;
+    display: inline-block;
+    width: 32px;
+    height: 16px;
+    text-align: center;
+}
+
+select {
+    background-color: #555; color: #eee
+}
