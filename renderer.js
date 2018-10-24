@@ -697,13 +697,15 @@ function setup()
       }
     }
 
-    if (force_redraw) {
-      renderScreenStatics(ctx, frame, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
-      lastStaticRedraw = frame;
-      renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, true);
-      force_redraw = false;
-    } else {
-      renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, false);
+    if (frame%2 == 0) {
+      if (force_redraw) {
+        renderScreenStatics(ctx, frame, letterWidthInPixels, kanjiWidthInPixels, fontHeight);
+        lastStaticRedraw = frame;
+        renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, true);
+        force_redraw = false;
+      } else {
+        renderScreenDynamics(ctx2, frame, lastStaticRedraw, letterWidthInPixels, kanjiWidthInPixels, fontHeight, false);
+      }
     }
     frame++;
     window.requestAnimationFrame(render)
