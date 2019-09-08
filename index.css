@@ -18,6 +18,19 @@ body {
     width: 100%;
     height: 100%;
 }
+
+canvas {
+    display: inline-block;
+    width: 100%;
+    height: auto;
+    max-height: 100vh;
+    max-width: 166vh;
+    margin: auto;
+    /* image-rendering: pixelated; */
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
 #screen-outer {
     font-family: "MS Gothic", "TakaoGothic", "Noto Sans Mono CJK JP", monospace;
     font-size: 16px;

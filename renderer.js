@@ -832,7 +832,7 @@ window.onload = () => {
   });
 
   $('#fullscreen-button').on('click', function () {
-    $('#screen-outer')[0].mozRequestFullScreen();
+    $('#screen-outer')[0].requestFullscreen();
   });
 
   $('#connect-button').on('click', function (e) {
