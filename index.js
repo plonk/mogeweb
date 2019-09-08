@@ -66,7 +66,8 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function () {
-    term.socket.destroy();
+    if (term.socket)
+      term.socket.destroy();
     console.log('close end');
   });
 
@@ -76,7 +77,8 @@ wss.on('connection', function connection(ws) {
   var job = setInterval(function () {
     if (pongWaiting) {
       console.log("client failed to pong");
-      term.socket.destroy();
+      if (term.socket)
+        term.socket.destroy();
       clearInterval(job);
     } else {
       try {
