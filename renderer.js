@@ -690,6 +690,11 @@ function setup()
   }
 
   var render = function() {
+    if (!force_redraw && frame%4 != 0) {
+      frame++;
+      window.requestAnimationFrame(render);
+      return;
+    }
     if (soundBuffer.length > 0) {
       console.log("addnotes", soundBuffer);
       if (soundSystem.addNotes(soundBuffer)) {
