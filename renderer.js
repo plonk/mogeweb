@@ -697,8 +697,15 @@ function setup()
     }
     if (soundBuffer.length > 0) {
       console.log("addnotes", soundBuffer);
-      if (soundSystem.addNotes(soundBuffer)) {
-        soundBuffer.length = 0;
+      if (soundSystem.isMuted()) {
+	console.log("discarding " + soundBuffer.length + " notes because sound system is muted");
+	soundBuffer.length = 0;
+      } else {
+	if (soundSystem.addNotes(soundBuffer)) {
+          soundBuffer.length = 0;
+	} else {
+	  // sound system is currently busy playing something else
+	}
       }
     }
 
