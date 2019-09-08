@@ -19,6 +19,10 @@ var ht = Math.pow(2,1/12); // half tone
 
 class SoundSystem2 {
   constructor() {
+    this.initialize();
+  }
+
+  initialize() {
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this.busyUntil = this.ctx.currentTime;
     this.oscillator = this.ctx.createOscillator();
@@ -32,6 +36,18 @@ class SoundSystem2 {
     this.oscillator.start();
 
     this.globalVolume = 0.25;
+  }
+
+  isMuted() {
+    return (this.ctx.state == "suspended");
+  }
+
+  mute() {
+    this.ctx.suspend();
+  }
+
+  unmute() {
+    this.initialize();
   }
 
   addNotes(queue) {

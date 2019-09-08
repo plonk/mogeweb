@@ -864,6 +864,19 @@ window.onload = () => {
 
   $('#version').html('0.0.2');
 
+  if (soundSystem.isMuted()) {
+    $('#mute-checkbox')[0].checked = true;
+  } else {
+    $('#mute-checkbox')[0].checked = false;
+  }
+  $('#mute-checkbox').on('change', function() {
+    if (this.checked) { // チェックボックスがONにされた。
+      soundSystem.mute();
+    } else {
+      soundSystem.unmute();
+    }
+  });
+
   function selectedValue(selectElement) {
     console.log(selectElement);
     if (selectElement.selectedOptions.length > 0) {
