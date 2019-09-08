@@ -826,6 +826,10 @@ window.onload = () => {
     showInputModal();
   });
 
+  $('#fullscreen-button').on('click', function () {
+    $('#screen-outer')[0].mozRequestFullScreen();
+  });
+
   $('#connect-button').on('click', function (e) {
     setup();
     receiver.fullReset();
