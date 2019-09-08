@@ -26,7 +26,7 @@ const command = process.argv[4];
 const args = process.argv.slice(5);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ host, port });
-var pty = require('pty.js');
+var pty = require('node-pty');
 
 console.log('Server started on port ' + port)
 
